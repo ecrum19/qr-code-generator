@@ -76,14 +76,16 @@
                 <p>Tune visual shape, corners, and color system.</p>
               </div>
 
-              <label for="artisticPreset">Artistic style preset</label>
-              <select id="artisticPreset" name="artisticPreset">
-                <option value="clean" selected>Clean Professional</option>
-                <option value="playful">Playful Poster</option>
-                <option value="warm">Warm Editorial</option>
-                <option value="neon">Neon Contrast</option>
-                <option value="mono">Monochrome Minimal</option>
-              </select>
+              <label for="artisticPreset">
+                Artistic style preset
+                <select id="artisticPreset" name="artisticPreset">
+                  <option value="clean" selected>Conference Navy</option>
+                  <option value="playful">Academic Teal</option>
+                  <option value="warm">Research Slate</option>
+                  <option value="neon">Institutional Indigo</option>
+                  <option value="mono">Monochrome Journal</option>
+                </select>
+              </label>
 
               <div class="grid two-up">
                 <label for="shape">General shape</label>
@@ -131,6 +133,11 @@
                   <input id="backgroundColor" name="backgroundColor" type="color" value="#f7fbff" />
                 </label>
               </div>
+
+              <label class="switch-row" for="noBackground">
+                <input id="noBackground" name="noBackground" type="checkbox" />
+                <span>No background (transparent)</span>
+              </label>
 
               <label class="switch-row" for="enableGradient">
                 <input id="enableGradient" name="enableGradient" type="checkbox" />
@@ -207,6 +214,100 @@
               </label>
 
               <button id="removeImage" class="secondary-button" type="button">Remove image</button>
+            </div>
+
+            <div class="control-group">
+              <div class="group-heading">
+                <h3>Outline & Text</h3>
+                <p>Add a frame and optional label text around the QR code.</p>
+              </div>
+
+              <label class="switch-row" for="enableOutline">
+                <input id="enableOutline" name="enableOutline" type="checkbox" />
+                <span>Add outline frame</span>
+              </label>
+
+              <div id="outlineFields" class="grid two-up is-disabled" aria-hidden="true">
+                <label>
+                  Outline thickness
+                  <input id="outlineThickness" name="outlineThickness" type="range" min="2" max="44" step="1" value="10" />
+                  <span id="outlineThicknessValue" class="metric-value">10px</span>
+                </label>
+                <label>
+                  Outline radius
+                  <input id="outlineRadius" name="outlineRadius" type="range" min="0" max="50" step="1" value="8" />
+                  <span id="outlineRadiusValue" class="metric-value">8%</span>
+                </label>
+                <label>
+                  Outline color
+                  <input id="outlineColor" name="outlineColor" type="color" value="#d4e2ee" />
+                </label>
+                <label>
+                  Outline background
+                  <input id="outlineBackground" name="outlineBackground" type="color" value="#ffffff" />
+                </label>
+              </div>
+
+              <label class="switch-row" for="enableTextDecoration">
+                <input id="enableTextDecoration" name="enableTextDecoration" type="checkbox" />
+                <span>Add text label</span>
+              </label>
+
+              <div id="textDecorationFields" class="grid two-up is-disabled" aria-hidden="true">
+                <label>
+                  Label text
+                  <input id="textDecorationValue" name="textDecorationValue" type="text" placeholder="Scan for paper details" />
+                </label>
+                <label>
+                  Label position
+                  <select id="textDecorationPosition" name="textDecorationPosition">
+                    <option value="bottom" selected>Bottom</option>
+                    <option value="top">Top</option>
+                  </select>
+                </label>
+                <label>
+                  Font family
+                  <select id="textDecorationFont" name="textDecorationFont">
+                    <option value="Manrope" selected>Manrope</option>
+                    <option value="Helvetica">Helvetica</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Trebuchet MS">Trebuchet MS</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                  </select>
+                </label>
+                <label>
+                  Text size
+                  <input id="textDecorationSize" name="textDecorationSize" type="range" min="10" max="34" step="1" value="16" />
+                  <span id="textDecorationSizeValue" class="metric-value">16px</span>
+                </label>
+                <label>
+                  Text color
+                  <input id="textDecorationColor" name="textDecorationColor" type="color" value="#1f2d3d" />
+                </label>
+                <label>
+                  Text weight
+                  <select id="textDecorationWeight" name="textDecorationWeight">
+                    <option value="bold" selected>Bold</option>
+                    <option value="normal">Normal</option>
+                  </select>
+                </label>
+                <label>
+                  Text transform
+                  <select id="textDecorationTransform" name="textDecorationTransform">
+                    <option value="none" selected>None</option>
+                    <option value="uppercase">Uppercase</option>
+                    <option value="lowercase">Lowercase</option>
+                    <option value="capitalize">Capitalize</option>
+                  </select>
+                </label>
+                <label class="switch-row" for="textDecorationCurved">
+                  <input id="textDecorationCurved" name="textDecorationCurved" type="checkbox" checked />
+                  <span>Curved text</span>
+                </label>
+              </div>
             </div>
 
             <div class="control-group">

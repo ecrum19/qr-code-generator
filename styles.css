@@ -148,7 +148,8 @@ button {
 
 textarea,
 select,
-input[type="file"] {
+input[type="file"],
+input[type="text"] {
   width: 100%;
   margin-top: 6px;
   border: 1px solid #cdd9e5;
@@ -183,11 +184,20 @@ input[type="range"] {
 textarea:focus-visible,
 select:focus-visible,
 input[type="file"]:focus-visible,
+input[type="text"]:focus-visible,
 input[type="color"]:focus-visible,
 button:focus-visible {
   outline: none;
   border-color: #8bb8d3;
   box-shadow: 0 0 0 3px rgba(23, 96, 135, 0.14);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background: #eef3f8;
+  color: #6d7f92;
+  cursor: not-allowed;
 }
 
 .metric-value {

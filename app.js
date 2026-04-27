@@ -21,6 +21,7 @@ const DOT_TYPES = [
 const CORNER_SQUARE_TYPES = ["auto", "dot", "square", "rounded", "classy", "outpoint", "inpoint"];
 const CORNER_DOT_TYPES = ["auto", "dot", "square", "heart", "rounded", "classy", "outpoint", "inpoint"];
 const ERROR_CORRECTION_LEVELS = ["L", "M", "Q", "H"];
+const TEXT_FONT_OPTIONS = ["Manrope", "Helvetica", "Arial", "Verdana", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New"];
 const PROFILE_VERSION = 1;
 
 const PRESETS = {
@@ -31,58 +32,118 @@ const PRESETS = {
     cornerDotType: "auto",
     cornerSharpness: 70,
     dotColor: "#173f5f",
-    cornerColor: "#20639b",
-    backgroundColor: "#f7fbff",
+    cornerColor: "#2a5f8f",
+    backgroundColor: "#f8fbff",
+    noBackground: false,
+    enableOutline: true,
+    outlineThickness: 10,
+    outlineRadius: 8,
+    outlineColor: "#d4e2ee",
+    outlineBackground: "#ffffff",
+    enableTextDecoration: false,
+    textDecorationValue: "Scan for details",
+    textDecorationPosition: "bottom",
+    textDecorationFont: "Manrope",
+    textDecorationSize: 16,
+    textDecorationColor: "#1f2d3d",
+    textDecorationWeight: "bold",
+    textDecorationTransform: "none",
+    textDecorationCurved: true,
     enableGradient: false,
     gradientType: "linear",
     gradientStart: "#173f5f",
-    gradientEnd: "#3caea3",
-    gradientRotation: 35
+    gradientEnd: "#2a5f8f",
+    gradientRotation: 28
   },
   playful: {
-    shape: "circle",
-    dotType: "star",
-    cornerSquareType: "rounded",
-    cornerDotType: "dot",
-    cornerSharpness: 38,
-    dotColor: "#0f3d8c",
-    cornerColor: "#ef476f",
-    backgroundColor: "#fff7ec",
-    enableGradient: true,
-    gradientType: "linear",
-    gradientStart: "#ef476f",
-    gradientEnd: "#ffd166",
-    gradientRotation: 52
-  },
-  warm: {
     shape: "square",
-    dotType: "classy",
+    dotType: "classyRounded",
     cornerSquareType: "classy",
     cornerDotType: "classy",
     cornerSharpness: 58,
-    dotColor: "#602437",
-    cornerColor: "#8f2d56",
-    backgroundColor: "#fdf6ee",
+    dotColor: "#0f766e",
+    cornerColor: "#0f5d56",
+    backgroundColor: "#f5fbfa",
+    noBackground: false,
+    enableOutline: true,
+    outlineThickness: 10,
+    outlineRadius: 8,
+    outlineColor: "#cfe6e4",
+    outlineBackground: "#ffffff",
+    enableTextDecoration: false,
+    textDecorationValue: "Scan for details",
+    textDecorationPosition: "bottom",
+    textDecorationFont: "Manrope",
+    textDecorationSize: 16,
+    textDecorationColor: "#1f2d3d",
+    textDecorationWeight: "bold",
+    textDecorationTransform: "none",
+    textDecorationCurved: true,
+    enableGradient: false,
+    gradientType: "linear",
+    gradientStart: "#0f766e",
+    gradientEnd: "#0f5d56",
+    gradientRotation: 22
+  },
+  warm: {
+    shape: "square",
+    dotType: "smallSquare",
+    cornerSquareType: "classy",
+    cornerDotType: "dot",
+    cornerSharpness: 76,
+    dotColor: "#334155",
+    cornerColor: "#1f2937",
+    backgroundColor: "#f8fafc",
+    noBackground: false,
+    enableOutline: true,
+    outlineThickness: 12,
+    outlineRadius: 10,
+    outlineColor: "#d9e2ef",
+    outlineBackground: "#ffffff",
+    enableTextDecoration: false,
+    textDecorationValue: "Scan for details",
+    textDecorationPosition: "bottom",
+    textDecorationFont: "Manrope",
+    textDecorationSize: 16,
+    textDecorationColor: "#1f2d3d",
+    textDecorationWeight: "bold",
+    textDecorationTransform: "none",
+    textDecorationCurved: true,
     enableGradient: true,
     gradientType: "linear",
-    gradientStart: "#602437",
-    gradientEnd: "#f18805",
-    gradientRotation: 18
+    gradientStart: "#334155",
+    gradientEnd: "#64748b",
+    gradientRotation: 38
   },
   neon: {
     shape: "square",
-    dotType: "diamond",
-    cornerSquareType: "outpoint",
-    cornerDotType: "inpoint",
-    cornerSharpness: 86,
-    dotColor: "#0d2a63",
-    cornerColor: "#1089ff",
-    backgroundColor: "#eef8ff",
+    dotType: "rounded",
+    cornerSquareType: "square",
+    cornerDotType: "square",
+    cornerSharpness: 92,
+    dotColor: "#312e81",
+    cornerColor: "#3730a3",
+    backgroundColor: "#f6f7ff",
+    noBackground: false,
+    enableOutline: true,
+    outlineThickness: 11,
+    outlineRadius: 9,
+    outlineColor: "#d6daf8",
+    outlineBackground: "#ffffff",
+    enableTextDecoration: false,
+    textDecorationValue: "Scan for details",
+    textDecorationPosition: "bottom",
+    textDecorationFont: "Manrope",
+    textDecorationSize: 16,
+    textDecorationColor: "#1f2d3d",
+    textDecorationWeight: "bold",
+    textDecorationTransform: "none",
+    textDecorationCurved: true,
     enableGradient: true,
     gradientType: "linear",
-    gradientStart: "#1089ff",
-    gradientEnd: "#00f5d4",
-    gradientRotation: 125
+    gradientStart: "#312e81",
+    gradientEnd: "#4f46e5",
+    gradientRotation: 64
   },
   mono: {
     shape: "square",
@@ -91,8 +152,23 @@ const PRESETS = {
     cornerDotType: "square",
     cornerSharpness: 98,
     dotColor: "#111827",
-    cornerColor: "#000000",
+    cornerColor: "#1f2937",
     backgroundColor: "#ffffff",
+    noBackground: false,
+    enableOutline: true,
+    outlineThickness: 10,
+    outlineRadius: 6,
+    outlineColor: "#e3e7ee",
+    outlineBackground: "#ffffff",
+    enableTextDecoration: false,
+    textDecorationValue: "Scan for details",
+    textDecorationPosition: "bottom",
+    textDecorationFont: "Manrope",
+    textDecorationSize: 16,
+    textDecorationColor: "#1f2d3d",
+    textDecorationWeight: "bold",
+    textDecorationTransform: "none",
+    textDecorationCurved: true,
     enableGradient: false,
     gradientType: "linear",
     gradientStart: "#111827",
@@ -119,6 +195,26 @@ const elements = {
   dotColor: document.querySelector("#dotColor"),
   cornerColor: document.querySelector("#cornerColor"),
   backgroundColor: document.querySelector("#backgroundColor"),
+  noBackground: document.querySelector("#noBackground"),
+  enableOutline: document.querySelector("#enableOutline"),
+  outlineFields: document.querySelector("#outlineFields"),
+  outlineThickness: document.querySelector("#outlineThickness"),
+  outlineThicknessValue: document.querySelector("#outlineThicknessValue"),
+  outlineRadius: document.querySelector("#outlineRadius"),
+  outlineRadiusValue: document.querySelector("#outlineRadiusValue"),
+  outlineColor: document.querySelector("#outlineColor"),
+  outlineBackground: document.querySelector("#outlineBackground"),
+  enableTextDecoration: document.querySelector("#enableTextDecoration"),
+  textDecorationFields: document.querySelector("#textDecorationFields"),
+  textDecorationValue: document.querySelector("#textDecorationValue"),
+  textDecorationPosition: document.querySelector("#textDecorationPosition"),
+  textDecorationFont: document.querySelector("#textDecorationFont"),
+  textDecorationSize: document.querySelector("#textDecorationSize"),
+  textDecorationSizeValue: document.querySelector("#textDecorationSizeValue"),
+  textDecorationColor: document.querySelector("#textDecorationColor"),
+  textDecorationWeight: document.querySelector("#textDecorationWeight"),
+  textDecorationTransform: document.querySelector("#textDecorationTransform"),
+  textDecorationCurved: document.querySelector("#textDecorationCurved"),
   enableGradient: document.querySelector("#enableGradient"),
   gradientFields: document.querySelector("#gradientFields"),
   gradientStart: document.querySelector("#gradientStart"),
@@ -172,8 +268,11 @@ function updateMetricReadouts() {
   elements.qrSizeValue.textContent = `${elements.qrSize.value}px`;
   elements.qrMarginValue.textContent = `${elements.qrMargin.value}px`;
   elements.cornerSharpnessValue.textContent = `${elements.cornerSharpness.value}%`;
+  elements.outlineThicknessValue.textContent = `${elements.outlineThickness.value}px`;
+  elements.outlineRadiusValue.textContent = `${elements.outlineRadius.value}%`;
   elements.gradientRotationValue.textContent =
     elements.gradientType.value === "linear" ? `${elements.gradientRotation.value}deg` : "N/A for radial";
+  elements.textDecorationSizeValue.textContent = `${elements.textDecorationSize.value}px`;
   elements.imageSizeValue.textContent = `${Math.round(Number(elements.imageSize.value) * 100)}%`;
   elements.imageMarginValue.textContent = `${elements.imageMargin.value} modules`;
 }
@@ -185,6 +284,17 @@ function syncGradientFields() {
 
   const isLinear = elements.gradientType.value === "linear";
   elements.gradientRotation.disabled = !isLinear;
+
+  elements.backgroundColor.disabled = elements.noBackground.checked;
+
+  const outlineEnabled = elements.enableOutline.checked;
+  const textEnabled = elements.enableTextDecoration.checked;
+  const showOutlineFields = outlineEnabled || textEnabled;
+  elements.outlineFields.classList.toggle("is-disabled", !showOutlineFields);
+  elements.outlineFields.setAttribute("aria-hidden", String(!showOutlineFields));
+
+  elements.textDecorationFields.classList.toggle("is-disabled", !textEnabled);
+  elements.textDecorationFields.setAttribute("aria-hidden", String(!textEnabled));
 }
 
 // Converts the sharpness slider into stylistic defaults when corner type is set to auto.
@@ -216,6 +326,36 @@ function buildQrOptions() {
   const data = elements.qrData.value.trim() || "https://example.com";
   const sharpness = Number(elements.cornerSharpness.value);
   const autoCornerProfile = deriveCornerProfile(sharpness);
+  const outlineEnabled = elements.enableOutline.checked;
+  const textEnabled = elements.enableTextDecoration.checked;
+  const textPosition = elements.textDecorationPosition.value;
+  const normalizedTextTransform = elements.textDecorationTransform.value === "none" ? undefined : elements.textDecorationTransform.value;
+  const outlineThickness = Math.round(Number(elements.outlineThickness.value));
+  const textSize = Math.round(Number(elements.textDecorationSize.value));
+  const borderThickness = textEnabled ? Math.max(outlineThickness, Math.round(textSize * 1.35)) : outlineThickness;
+  const textStyle = {
+    fontColor: elements.textDecorationColor.value,
+    fontSize: textSize,
+    fontWeight: elements.textDecorationWeight.value,
+    fontFamily: elements.textDecorationFont.value
+  };
+  const buildTextDecoration = (isActive) => {
+    const decoration = {
+      type: "text",
+      value: isActive ? elements.textDecorationValue.value.trim() : "",
+      style: textStyle,
+      offset: 14,
+      curveDisabled: !elements.textDecorationCurved.checked,
+      enableText: isActive,
+      disabled: !isActive
+    };
+
+    if (normalizedTextTransform) {
+      decoration.textTransform = normalizedTextTransform;
+    }
+
+    return decoration;
+  };
 
   const cornerSquareType =
     elements.cornerSquareType.value === "auto" ? autoCornerProfile.square : elements.cornerSquareType.value;
@@ -244,8 +384,20 @@ function buildQrOptions() {
       color: elements.cornerColor.value
     },
     backgroundOptions: {
-      color: elements.backgroundColor.value,
+      color: elements.noBackground.checked ? "transparent" : elements.backgroundColor.value,
       round: autoCornerProfile.backgroundRound
+    },
+    borderOptions: {
+      hasBorder: outlineEnabled || textEnabled,
+      thickness: borderThickness,
+      color: outlineEnabled ? elements.outlineColor.value : "transparent",
+      radius: `${Math.round(Number(elements.outlineRadius.value))}%`,
+      background: elements.outlineBackground.value,
+      showBackground: true,
+      decorations: {
+        top: buildTextDecoration(textEnabled && textPosition === "top"),
+        bottom: buildTextDecoration(textEnabled && textPosition === "bottom")
+      }
     }
   };
 
@@ -317,6 +469,21 @@ function applyPreset(presetName) {
   elements.dotColor.value = preset.dotColor;
   elements.cornerColor.value = preset.cornerColor;
   elements.backgroundColor.value = preset.backgroundColor;
+  elements.noBackground.checked = Boolean(preset.noBackground);
+  elements.enableOutline.checked = Boolean(preset.enableOutline);
+  elements.outlineThickness.value = String(preset.outlineThickness);
+  elements.outlineRadius.value = String(preset.outlineRadius);
+  elements.outlineColor.value = preset.outlineColor;
+  elements.outlineBackground.value = preset.outlineBackground;
+  elements.enableTextDecoration.checked = Boolean(preset.enableTextDecoration);
+  elements.textDecorationValue.value = preset.textDecorationValue;
+  elements.textDecorationPosition.value = preset.textDecorationPosition;
+  elements.textDecorationFont.value = preset.textDecorationFont;
+  elements.textDecorationSize.value = String(preset.textDecorationSize);
+  elements.textDecorationColor.value = preset.textDecorationColor;
+  elements.textDecorationWeight.value = preset.textDecorationWeight;
+  elements.textDecorationTransform.value = preset.textDecorationTransform;
+  elements.textDecorationCurved.checked = Boolean(preset.textDecorationCurved);
   elements.enableGradient.checked = preset.enableGradient;
   elements.gradientType.value = preset.gradientType;
   elements.gradientStart.value = preset.gradientStart;
@@ -382,6 +549,21 @@ function randomizeAppearance() {
   elements.dotColor.value = hslToHex(hue, randomInteger(55, 90), randomInteger(20, 46));
   elements.cornerColor.value = hslToHex(accentHue, randomInteger(50, 90), randomInteger(24, 48));
   elements.backgroundColor.value = hslToHex((hue + 180) % 360, randomInteger(28, 54), randomInteger(92, 98));
+  elements.noBackground.checked = Math.random() > 0.85;
+  elements.enableOutline.checked = Math.random() > 0.45;
+  elements.outlineThickness.value = String(randomInteger(6, 16));
+  elements.outlineRadius.value = String(randomInteger(4, 20));
+  elements.outlineColor.value = hslToHex((hue + 210) % 360, randomInteger(18, 35), randomInteger(78, 92));
+  elements.outlineBackground.value = "#ffffff";
+  elements.enableTextDecoration.checked = false;
+  elements.textDecorationValue.value = "Scan for details";
+  elements.textDecorationPosition.value = randomPick(["bottom", "top"]);
+  elements.textDecorationFont.value = randomPick(["Manrope", "Helvetica", "Arial", "Verdana", "Georgia"]);
+  elements.textDecorationSize.value = String(randomInteger(12, 20));
+  elements.textDecorationColor.value = hslToHex((hue + 30) % 360, randomInteger(20, 42), randomInteger(18, 35));
+  elements.textDecorationWeight.value = randomPick(["bold", "normal"]);
+  elements.textDecorationTransform.value = randomPick(["none", "uppercase"]);
+  elements.textDecorationCurved.checked = Math.random() > 0.45;
 
   // Randomization keeps contrast biased toward darker foreground + lighter background.
   const enableGradient = Math.random() > 0.4;
@@ -406,6 +588,21 @@ function resetDefaults() {
   elements.imageMode.value = "center";
   elements.imageSize.value = "0.28";
   elements.imageMargin.value = "2";
+  elements.noBackground.checked = false;
+  elements.enableOutline.checked = true;
+  elements.outlineThickness.value = "10";
+  elements.outlineRadius.value = "8";
+  elements.outlineColor.value = "#d4e2ee";
+  elements.outlineBackground.value = "#ffffff";
+  elements.enableTextDecoration.checked = false;
+  elements.textDecorationValue.value = "Scan for details";
+  elements.textDecorationPosition.value = "bottom";
+  elements.textDecorationFont.value = "Manrope";
+  elements.textDecorationSize.value = "16";
+  elements.textDecorationColor.value = "#1f2d3d";
+  elements.textDecorationWeight.value = "bold";
+  elements.textDecorationTransform.value = "none";
+  elements.textDecorationCurved.checked = true;
   elements.gradientType.value = "linear";
   elements.artisticPreset.value = "clean";
   uploadedImageData = null;
@@ -446,6 +643,21 @@ function getCurrentProfile() {
       dotColor: elements.dotColor.value,
       cornerColor: elements.cornerColor.value,
       backgroundColor: elements.backgroundColor.value,
+      noBackground: elements.noBackground.checked,
+      enableOutline: elements.enableOutline.checked,
+      outlineThickness: Number(elements.outlineThickness.value),
+      outlineRadius: Number(elements.outlineRadius.value),
+      outlineColor: elements.outlineColor.value,
+      outlineBackground: elements.outlineBackground.value,
+      enableTextDecoration: elements.enableTextDecoration.checked,
+      textDecorationValue: elements.textDecorationValue.value,
+      textDecorationPosition: elements.textDecorationPosition.value,
+      textDecorationFont: elements.textDecorationFont.value,
+      textDecorationSize: Number(elements.textDecorationSize.value),
+      textDecorationColor: elements.textDecorationColor.value,
+      textDecorationWeight: elements.textDecorationWeight.value,
+      textDecorationTransform: elements.textDecorationTransform.value,
+      textDecorationCurved: elements.textDecorationCurved.checked,
       enableGradient: elements.enableGradient.checked,
       gradientType: elements.gradientType.value,
       gradientStart: elements.gradientStart.value,
@@ -474,6 +686,21 @@ function applyProfileSettings(rawSettings = {}) {
     dotColor: typeof rawSettings.dotColor === "string" ? rawSettings.dotColor : "#173f5f",
     cornerColor: typeof rawSettings.cornerColor === "string" ? rawSettings.cornerColor : "#20639b",
     backgroundColor: typeof rawSettings.backgroundColor === "string" ? rawSettings.backgroundColor : "#f7fbff",
+    noBackground: Boolean(rawSettings.noBackground),
+    enableOutline: rawSettings.enableOutline !== undefined ? Boolean(rawSettings.enableOutline) : true,
+    outlineThickness: clampNumber(rawSettings.outlineThickness, 2, 44, 10),
+    outlineRadius: clampNumber(rawSettings.outlineRadius, 0, 50, 8),
+    outlineColor: typeof rawSettings.outlineColor === "string" ? rawSettings.outlineColor : "#d4e2ee",
+    outlineBackground: typeof rawSettings.outlineBackground === "string" ? rawSettings.outlineBackground : "#ffffff",
+    enableTextDecoration: Boolean(rawSettings.enableTextDecoration),
+    textDecorationValue: typeof rawSettings.textDecorationValue === "string" ? rawSettings.textDecorationValue : "Scan for details",
+    textDecorationPosition: pickAllowed(rawSettings.textDecorationPosition, ["top", "bottom"], "bottom"),
+    textDecorationFont: pickAllowed(rawSettings.textDecorationFont, TEXT_FONT_OPTIONS, "Manrope"),
+    textDecorationSize: clampNumber(rawSettings.textDecorationSize, 10, 34, 16),
+    textDecorationColor: typeof rawSettings.textDecorationColor === "string" ? rawSettings.textDecorationColor : "#1f2d3d",
+    textDecorationWeight: pickAllowed(rawSettings.textDecorationWeight, ["normal", "bold"], "bold"),
+    textDecorationTransform: pickAllowed(rawSettings.textDecorationTransform, ["none", "uppercase", "lowercase", "capitalize"], "none"),
+    textDecorationCurved: rawSettings.textDecorationCurved !== undefined ? Boolean(rawSettings.textDecorationCurved) : true,
     enableGradient: Boolean(rawSettings.enableGradient),
     gradientType: pickAllowed(rawSettings.gradientType, ["linear", "radial"], "linear"),
     gradientStart: typeof rawSettings.gradientStart === "string" ? rawSettings.gradientStart : "#173f5f",
@@ -498,6 +725,21 @@ function applyProfileSettings(rawSettings = {}) {
   elements.dotColor.value = settings.dotColor;
   elements.cornerColor.value = settings.cornerColor;
   elements.backgroundColor.value = settings.backgroundColor;
+  elements.noBackground.checked = settings.noBackground;
+  elements.enableOutline.checked = settings.enableOutline;
+  elements.outlineThickness.value = String(settings.outlineThickness);
+  elements.outlineRadius.value = String(settings.outlineRadius);
+  elements.outlineColor.value = settings.outlineColor;
+  elements.outlineBackground.value = settings.outlineBackground;
+  elements.enableTextDecoration.checked = settings.enableTextDecoration;
+  elements.textDecorationValue.value = settings.textDecorationValue;
+  elements.textDecorationPosition.value = settings.textDecorationPosition;
+  elements.textDecorationFont.value = settings.textDecorationFont;
+  elements.textDecorationSize.value = String(settings.textDecorationSize);
+  elements.textDecorationColor.value = settings.textDecorationColor;
+  elements.textDecorationWeight.value = settings.textDecorationWeight;
+  elements.textDecorationTransform.value = settings.textDecorationTransform;
+  elements.textDecorationCurved.checked = settings.textDecorationCurved;
   elements.enableGradient.checked = settings.enableGradient;
   elements.gradientType.value = settings.gradientType;
   elements.gradientStart.value = settings.gradientStart;

@@ -123,10 +123,17 @@
 
               <label class="switch-row" for="enableGradient">
                 <input id="enableGradient" name="enableGradient" type="checkbox" />
-                <span>Use linear gradient on dots</span>
+                <span>Use gradient on dots</span>
               </label>
 
-              <div id="gradientFields" class="grid three-up is-disabled" aria-hidden="true">
+              <div id="gradientFields" class="grid two-up is-disabled" aria-hidden="true">
+                <label for="gradientType">
+                  Gradient type
+                  <select id="gradientType" name="gradientType">
+                    <option value="linear" selected>Linear</option>
+                    <option value="radial">Radial</option>
+                  </select>
+                </label>
                 <label>
                   Start
                   <input id="gradientStart" name="gradientStart" type="color" value="#173f5f" />

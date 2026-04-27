@@ -32,6 +32,7 @@ const PRESETS = {
     cornerColor: "#20639b",
     backgroundColor: "#f7fbff",
     enableGradient: false,
+    gradientType: "linear",
     gradientStart: "#173f5f",
     gradientEnd: "#3caea3",
     gradientRotation: 35
@@ -46,6 +47,7 @@ const PRESETS = {
     cornerColor: "#ef476f",
     backgroundColor: "#fff7ec",
     enableGradient: true,
+    gradientType: "linear",
     gradientStart: "#ef476f",
     gradientEnd: "#ffd166",
     gradientRotation: 52
@@ -60,6 +62,7 @@ const PRESETS = {
     cornerColor: "#8f2d56",
     backgroundColor: "#fdf6ee",
     enableGradient: true,
+    gradientType: "linear",
     gradientStart: "#602437",
     gradientEnd: "#f18805",
     gradientRotation: 18
@@ -74,6 +77,7 @@ const PRESETS = {
     cornerColor: "#1089ff",
     backgroundColor: "#eef8ff",
     enableGradient: true,
+    gradientType: "linear",
     gradientStart: "#1089ff",
     gradientEnd: "#00f5d4",
     gradientRotation: 125
@@ -88,6 +92,7 @@ const PRESETS = {
     cornerColor: "#000000",
     backgroundColor: "#ffffff",
     enableGradient: false,
+    gradientType: "linear",
     gradientStart: "#111827",
     gradientEnd: "#4b5563",
     gradientRotation: 0
@@ -116,6 +121,7 @@ const elements = {
   gradientFields: document.querySelector("#gradientFields"),
   gradientStart: document.querySelector("#gradientStart"),
   gradientEnd: document.querySelector("#gradientEnd"),
+  gradientType: document.querySelector("#gradientType"),
   gradientRotation: document.querySelector("#gradientRotation"),
   gradientRotationValue: document.querySelector("#gradientRotationValue"),
   logoUpload: document.querySelector("#logoUpload"),
@@ -135,6 +141,7 @@ const elements = {
 
 let qrCodeInstance;
 let uploadedImageData = null;
+let previousGradientEnabled = false;
 
 function toTitleCase(value) {
   return value
@@ -159,7 +166,8 @@ function updateMetricReadouts() {
   elements.qrSizeValue.textContent = `${elements.qrSize.value}px`;
   elements.qrMarginValue.textContent = `${elements.qrMargin.value}px`;
   elements.cornerSharpnessValue.textContent = `${elements.cornerSharpness.value}%`;
-  elements.gradientRotationValue.textContent = `${elements.gradientRotation.value}deg`;
+  elements.gradientRotationValue.textContent =
+    elements.gradientType.value === "linear" ? `${elements.gradientRotation.value}deg` : "N/A for radial";
   elements.imageSizeValue.textContent = `${Math.round(Number(elements.imageSize.value) * 100)}%`;
   elements.imageMarginValue.textContent = `${elements.imageMargin.value} modules`;
 }
@@ -168,6 +176,9 @@ function syncGradientFields() {
   const isEnabled = elements.enableGradient.checked;
   elements.gradientFields.classList.toggle("is-disabled", !isEnabled);
   elements.gradientFields.setAttribute("aria-hidden", String(!isEnabled));
+
+  const isLinear = elements.gradientType.value === "linear";
+  elements.gradientRotation.disabled = !isLinear;
 }
 
 // Converts the sharpness slider into stylistic defaults when corner type is set to auto.
@@ -233,14 +244,22 @@ function buildQrOptions() {
   };
 
   if (elements.enableGradient.checked) {
-    options.dotsOptions.gradient = {
-      type: "linear",
-      rotation: (Number(elements.gradientRotation.value) * Math.PI) / 180,
+    const gradient = {
+      type: elements.gradientType.value,
       colorStops: [
         { offset: 0, color: elements.gradientStart.value },
         { offset: 1, color: elements.gradientEnd.value }
       ]
     };
+
+    if (elements.gradientType.value === "linear") {
+      gradient.rotation = (Number(elements.gradientRotation.value) * Math.PI) / 180;
+    }
+
+    options.dotsOptions.gradient = gradient;
+  } else {
+    // Explicitly clear previous gradient when toggled off.
+    options.dotsOptions.gradient = null;
   }
 
   if (uploadedImageData) {
@@ -262,14 +281,18 @@ function renderQrCode() {
   try {
     const options = buildQrOptions();
 
-    // Create once, then update in place for fast, smooth control changes.
-    if (!qrCodeInstance) {
+    // Recreate instance when turning gradient off to avoid stale nested options from update merges.
+    const gradientEnabled = elements.enableGradient.checked;
+    const shouldRecreate = !qrCodeInstance || (previousGradientEnabled && !gradientEnabled);
+
+    if (shouldRecreate) {
       qrCodeInstance = new QRCodeJs(options);
       qrCodeInstance.append(elements.qrMount, { clearContainer: true });
     } else {
       qrCodeInstance.update(options);
     }
 
+    previousGradientEnabled = gradientEnabled;
     setStatus("Preview updated");
   } catch (error) {
     setStatus(`Could not render QR code: ${error.message}`, true);
@@ -288,6 +311,7 @@ function applyPreset(presetName) {
   elements.cornerColor.value = preset.cornerColor;
   elements.backgroundColor.value = preset.backgroundColor;
   elements.enableGradient.checked = preset.enableGradient;
+  elements.gradientType.value = preset.gradientType;
   elements.gradientStart.value = preset.gradientStart;
   elements.gradientEnd.value = preset.gradientEnd;
   elements.gradientRotation.value = String(preset.gradientRotation);
@@ -355,6 +379,7 @@ function randomizeAppearance() {
   // Randomization keeps contrast biased toward darker foreground + lighter background.
   const enableGradient = Math.random() > 0.4;
   elements.enableGradient.checked = enableGradient;
+  elements.gradientType.value = randomPick(["linear", "radial"]);
   elements.gradientStart.value = hslToHex(hue, randomInteger(58, 95), randomInteger(28, 52));
   elements.gradientEnd.value = hslToHex(accentHue, randomInteger(52, 95), randomInteger(30, 56));
   elements.gradientRotation.value = String(randomInteger(0, 360));
@@ -374,6 +399,7 @@ function resetDefaults() {
   elements.imageMode.value = "center";
   elements.imageSize.value = "0.28";
   elements.imageMargin.value = "2";
+  elements.gradientType.value = "linear";
   elements.artisticPreset.value = "clean";
   uploadedImageData = null;
   elements.logoUpload.value = "";

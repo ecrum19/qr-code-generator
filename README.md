@@ -14,8 +14,11 @@ A web-based QR code generator workshop built with [`@qr-platform/qr-code.js`](ht
   - color palette
 - Optional dot gradients (`linear` or `radial`)
 - Optional transparent background mode.
+- Custom transparent-preview backdrop color in the preview panel.
 - Optional outline frame controls (thickness, radius, color, background).
 - Optional text label on the outline with configurable font family, size, color, weight, and transform.
+- Image inclusion via file upload or direct image URL.
+- Separate optional novelty style dropdown for non-standard motifs (stars, hearts, etc.).
 - Upload and embed custom images/logos.
 - Save and load complete style profiles in JSON.
 - Professional-ready style presets for conference and academic decks.
@@ -59,6 +62,7 @@ After deployment, the site URL will appear in the workflow output and on the rep
 - Corner sharpness is implemented as a profile helper that maps slider values to corner style behavior when corner controls are set to `Auto`.
 - Gradient rotation is controlled in degrees in the UI and converted to radians for QRCode.js.
 - Outline and label text are rendered through `borderOptions` and `borderOptions.decorations` so they are included in exports.
+- Novelty styles are implemented as optional overrides on top of the base style selectors.
 - Saved JSON profiles include payload, visual settings, and optional embedded image data.
 
 ## Future Improvements

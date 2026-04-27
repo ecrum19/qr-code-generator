@@ -61,13 +61,15 @@
                 </label>
               </div>
 
-              <label for="errorCorrection">Error correction</label>
-              <select id="errorCorrection" name="errorCorrection">
-                <option value="L">L - 7%</option>
-                <option value="M">M - 15%</option>
-                <option value="Q" selected>Q - 25%</option>
-                <option value="H">H - 30%</option>
-              </select>
+              <label for="errorCorrection" class="inline-field">
+                <span>Error correction</span>
+                <select id="errorCorrection" name="errorCorrection">
+                  <option value="L">L - 7%</option>
+                  <option value="M">M - 15%</option>
+                  <option value="Q" selected>Q - 25%</option>
+                  <option value="H">H - 30%</option>
+                </select>
+              </label>
             </div>
 
             <div class="control-group">
@@ -76,8 +78,8 @@
                 <p>Tune visual shape, corners, and color system.</p>
               </div>
 
-              <label for="artisticPreset">
-                Artistic style preset
+              <label for="artisticPreset" class="inline-field">
+                <span>Artistic style preset</span>
                 <select id="artisticPreset" name="artisticPreset">
                   <option value="clean" selected>Conference Navy</option>
                   <option value="playful">Academic Teal</option>
@@ -88,23 +90,36 @@
               </label>
 
               <div class="grid two-up">
-                <label for="shape">General shape</label>
-                <select id="shape" name="shape">
-                  <option value="square" selected>Square</option>
-                  <option value="circle">Circle</option>
-                </select>
+                <label for="shape" class="inline-field">
+                  <span>General shape</span>
+                  <select id="shape" name="shape">
+                    <option value="square" selected>Square</option>
+                    <option value="circle">Circle</option>
+                  </select>
+                </label>
 
-                <label for="dotType">Dot style</label>
-                <select id="dotType" name="dotType"></select>
+                <label for="dotType" class="inline-field">
+                  <span>Dot style</span>
+                  <select id="dotType" name="dotType"></select>
+                </label>
               </div>
 
               <div class="grid two-up">
-                <label for="cornerSquareType">Corner square style</label>
-                <select id="cornerSquareType" name="cornerSquareType"></select>
+                <label for="cornerSquareType" class="inline-field">
+                  <span>Corner square style</span>
+                  <select id="cornerSquareType" name="cornerSquareType"></select>
+                </label>
 
-                <label for="cornerDotType">Corner dot style</label>
-                <select id="cornerDotType" name="cornerDotType"></select>
+                <label for="cornerDotType" class="inline-field">
+                  <span>Corner dot style</span>
+                  <select id="cornerDotType" name="cornerDotType"></select>
+                </label>
               </div>
+
+              <label for="optionalStyle" class="inline-field">
+                <span>Optional novelty style</span>
+                <select id="optionalStyle" name="optionalStyle"></select>
+              </label>
 
               <label>
                 Corner sharpness
@@ -139,14 +154,19 @@
                 <span>No background (transparent)</span>
               </label>
 
+              <label id="previewBackgroundField" for="previewBackgroundColor" class="inline-field is-disabled" aria-hidden="true">
+                <span>Transparent preview backdrop</span>
+                <input id="previewBackgroundColor" name="previewBackgroundColor" type="color" value="#f4f7fb" />
+              </label>
+
               <label class="switch-row" for="enableGradient">
                 <input id="enableGradient" name="enableGradient" type="checkbox" />
                 <span>Use gradient on dots</span>
               </label>
 
               <div id="gradientFields" class="grid two-up is-disabled" aria-hidden="true">
-                <label for="gradientType">
-                  Gradient type
+                <label for="gradientType" class="inline-field">
+                  <span>Gradient type</span>
                   <select id="gradientType" name="gradientType">
                     <option value="linear" selected>Linear</option>
                     <option value="radial">Radial</option>
@@ -184,13 +204,21 @@
               <label for="logoUpload">Upload custom image</label>
               <input id="logoUpload" name="logoUpload" type="file" accept="image/*" />
 
+              <label for="imageUrlInput">Or use image URL</label>
+              <input id="imageUrlInput" name="imageUrlInput" type="url" placeholder="https://example.com/logo.png" />
+              <div class="button-row">
+                <button id="loadImageUrl" class="secondary-button" type="button">Load image URL</button>
+              </div>
+
               <div class="grid two-up">
-                <label for="imageMode">Image mode</label>
-                <select id="imageMode" name="imageMode">
-                  <option value="center" selected>Center</option>
-                  <option value="overlay">Overlay</option>
-                  <option value="background">Background</option>
-                </select>
+                <label for="imageMode" class="inline-field">
+                  <span>Image mode</span>
+                  <select id="imageMode" name="imageMode">
+                    <option value="center" selected>Center</option>
+                    <option value="overlay">Overlay</option>
+                    <option value="background">Background</option>
+                  </select>
+                </label>
 
                 <label>
                   Image size
@@ -258,15 +286,15 @@
                   Label text
                   <input id="textDecorationValue" name="textDecorationValue" type="text" placeholder="Scan for paper details" />
                 </label>
-                <label>
-                  Label position
+                <label class="inline-field">
+                  <span>Label position</span>
                   <select id="textDecorationPosition" name="textDecorationPosition">
                     <option value="bottom" selected>Bottom</option>
                     <option value="top">Top</option>
                   </select>
                 </label>
-                <label>
-                  Font family
+                <label class="inline-field">
+                  <span>Font family</span>
                   <select id="textDecorationFont" name="textDecorationFont">
                     <option value="Manrope" selected>Manrope</option>
                     <option value="Helvetica">Helvetica</option>
@@ -287,15 +315,15 @@
                   Text color
                   <input id="textDecorationColor" name="textDecorationColor" type="color" value="#1f2d3d" />
                 </label>
-                <label>
-                  Text weight
+                <label class="inline-field">
+                  <span>Text weight</span>
                   <select id="textDecorationWeight" name="textDecorationWeight">
                     <option value="bold" selected>Bold</option>
                     <option value="normal">Normal</option>
                   </select>
                 </label>
-                <label>
-                  Text transform
+                <label class="inline-field">
+                  <span>Text transform</span>
                   <select id="textDecorationTransform" name="textDecorationTransform">
                     <option value="none" selected>None</option>
                     <option value="uppercase">Uppercase</option>
@@ -337,13 +365,15 @@
             <div id="qrMount" class="qr-mount"></div>
 
             <div class="download-row">
-              <label for="downloadFormat">Export format</label>
-              <select id="downloadFormat" name="downloadFormat">
-                <option value="png" selected>PNG</option>
-                <option value="svg">SVG</option>
-                <option value="jpeg">JPEG</option>
-                <option value="webp">WEBP</option>
-              </select>
+              <label for="downloadFormat" class="inline-field">
+                <span>Export format</span>
+                <select id="downloadFormat" name="downloadFormat">
+                  <option value="png" selected>PNG</option>
+                  <option value="svg">SVG</option>
+                  <option value="jpeg">JPEG</option>
+                  <option value="webp">WEBP</option>
+                </select>
+              </label>
               <button id="downloadButton" type="button">Download QR</button>
             </div>
           </div>

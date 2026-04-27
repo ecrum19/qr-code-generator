@@ -1,7 +1,7 @@
 import { QRCodeJs } from "https://cdn.jsdelivr.net/npm/@qr-platform/qr-code.js@latest/+esm";
 
 // Supported style values taken from the qr-code.js documentation.
-const DOT_TYPES = [
+const STANDARD_DOT_TYPES = [
   "dot",
   "square",
   "rounded",
@@ -10,16 +10,25 @@ const DOT_TYPES = [
   "classyRounded",
   "verticalLine",
   "horizontalLine",
-  "randomDot",
   "smallSquare",
-  "tinySquare",
-  "star",
-  "plus",
-  "diamond"
+  "tinySquare"
 ];
 
-const CORNER_SQUARE_TYPES = ["auto", "dot", "square", "rounded", "classy", "outpoint", "inpoint"];
-const CORNER_DOT_TYPES = ["auto", "dot", "square", "heart", "rounded", "classy", "outpoint", "inpoint"];
+const STANDARD_CORNER_SQUARE_TYPES = ["auto", "dot", "square", "rounded", "classy"];
+const STANDARD_CORNER_DOT_TYPES = ["auto", "dot", "square", "rounded", "classy"];
+const OPTIONAL_STYLE_OPTIONS = [
+  { value: "none", label: "None" },
+  { value: "star", label: "Star Dots" },
+  { value: "plus", label: "Plus Dots" },
+  { value: "diamond", label: "Diamond Dots" },
+  { value: "randomDot", label: "Random Dot Mix" },
+  { value: "cornerHeart", label: "Heart Corner Dots" },
+  { value: "cornerOutpoint", label: "Outpoint Corner Dots" },
+  { value: "cornerInpoint", label: "Inpoint Corner Dots" },
+  { value: "squareOutpoint", label: "Outpoint Corner Squares" },
+  { value: "squareInpoint", label: "Inpoint Corner Squares" }
+];
+const OPTIONAL_STYLE_VALUES = OPTIONAL_STYLE_OPTIONS.map((option) => option.value);
 const ERROR_CORRECTION_LEVELS = ["L", "M", "Q", "H"];
 const TEXT_FONT_OPTIONS = ["Manrope", "Helvetica", "Arial", "Verdana", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New"];
 const PROFILE_VERSION = 1;
@@ -30,6 +39,7 @@ const PRESETS = {
     dotType: "rounded",
     cornerSquareType: "auto",
     cornerDotType: "auto",
+    optionalStyle: "none",
     cornerSharpness: 70,
     dotColor: "#173f5f",
     cornerColor: "#2a5f8f",
@@ -60,6 +70,7 @@ const PRESETS = {
     dotType: "classyRounded",
     cornerSquareType: "classy",
     cornerDotType: "classy",
+    optionalStyle: "none",
     cornerSharpness: 58,
     dotColor: "#0f766e",
     cornerColor: "#0f5d56",
@@ -90,6 +101,7 @@ const PRESETS = {
     dotType: "smallSquare",
     cornerSquareType: "classy",
     cornerDotType: "dot",
+    optionalStyle: "none",
     cornerSharpness: 76,
     dotColor: "#334155",
     cornerColor: "#1f2937",
@@ -120,6 +132,7 @@ const PRESETS = {
     dotType: "rounded",
     cornerSquareType: "square",
     cornerDotType: "square",
+    optionalStyle: "none",
     cornerSharpness: 92,
     dotColor: "#312e81",
     cornerColor: "#3730a3",
@@ -150,6 +163,7 @@ const PRESETS = {
     dotType: "tinySquare",
     cornerSquareType: "square",
     cornerDotType: "square",
+    optionalStyle: "none",
     cornerSharpness: 98,
     dotColor: "#111827",
     cornerColor: "#1f2937",
@@ -190,12 +204,15 @@ const elements = {
   dotType: document.querySelector("#dotType"),
   cornerSquareType: document.querySelector("#cornerSquareType"),
   cornerDotType: document.querySelector("#cornerDotType"),
+  optionalStyle: document.querySelector("#optionalStyle"),
   cornerSharpness: document.querySelector("#cornerSharpness"),
   cornerSharpnessValue: document.querySelector("#cornerSharpnessValue"),
   dotColor: document.querySelector("#dotColor"),
   cornerColor: document.querySelector("#cornerColor"),
   backgroundColor: document.querySelector("#backgroundColor"),
   noBackground: document.querySelector("#noBackground"),
+  previewBackgroundField: document.querySelector("#previewBackgroundField"),
+  previewBackgroundColor: document.querySelector("#previewBackgroundColor"),
   enableOutline: document.querySelector("#enableOutline"),
   outlineFields: document.querySelector("#outlineFields"),
   outlineThickness: document.querySelector("#outlineThickness"),
@@ -223,6 +240,8 @@ const elements = {
   gradientRotation: document.querySelector("#gradientRotation"),
   gradientRotationValue: document.querySelector("#gradientRotationValue"),
   logoUpload: document.querySelector("#logoUpload"),
+  imageUrlInput: document.querySelector("#imageUrlInput"),
+  loadImageUrl: document.querySelector("#loadImageUrl"),
   removeImage: document.querySelector("#removeImage"),
   imageMode: document.querySelector("#imageMode"),
   imageSize: document.querySelector("#imageSize"),
@@ -254,7 +273,11 @@ function toTitleCase(value) {
 
 function fillSelect(selectElement, values) {
   const optionsMarkup = values
-    .map((value) => `<option value="${value}">${value === "auto" ? "Auto" : toTitleCase(value)}</option>`)
+    .map((entry) => {
+      const value = typeof entry === "string" ? entry : entry.value;
+      const label = typeof entry === "string" ? (value === "auto" ? "Auto" : toTitleCase(value)) : entry.label;
+      return `<option value="${value}">${label}</option>`;
+    })
     .join("");
   selectElement.innerHTML = optionsMarkup;
 }
@@ -286,6 +309,9 @@ function syncGradientFields() {
   elements.gradientRotation.disabled = !isLinear;
 
   elements.backgroundColor.disabled = elements.noBackground.checked;
+  elements.previewBackgroundColor.disabled = !elements.noBackground.checked;
+  elements.previewBackgroundField.classList.toggle("is-disabled", !elements.noBackground.checked);
+  elements.previewBackgroundField.setAttribute("aria-hidden", String(!elements.noBackground.checked));
 
   const outlineEnabled = elements.enableOutline.checked;
   const textEnabled = elements.enableTextDecoration.checked;
@@ -295,6 +321,17 @@ function syncGradientFields() {
 
   elements.textDecorationFields.classList.toggle("is-disabled", !textEnabled);
   elements.textDecorationFields.setAttribute("aria-hidden", String(!textEnabled));
+}
+
+function applyPreviewBackground() {
+  if (elements.noBackground.checked) {
+    elements.qrMount.classList.add("transparent-preview");
+    elements.qrMount.style.setProperty("--preview-bg-color", elements.previewBackgroundColor.value);
+    return;
+  }
+
+  elements.qrMount.classList.remove("transparent-preview");
+  elements.qrMount.style.removeProperty("--preview-bg-color");
 }
 
 // Converts the sharpness slider into stylistic defaults when corner type is set to auto.
@@ -360,6 +397,35 @@ function buildQrOptions() {
   const cornerSquareType =
     elements.cornerSquareType.value === "auto" ? autoCornerProfile.square : elements.cornerSquareType.value;
   const cornerDotType = elements.cornerDotType.value === "auto" ? autoCornerProfile.dot : elements.cornerDotType.value;
+  let resolvedDotType = elements.dotType.value;
+  let resolvedCornerSquareType = cornerSquareType;
+  let resolvedCornerDotType = cornerDotType;
+
+  switch (elements.optionalStyle.value) {
+    case "star":
+    case "plus":
+    case "diamond":
+    case "randomDot":
+      resolvedDotType = elements.optionalStyle.value;
+      break;
+    case "cornerHeart":
+      resolvedCornerDotType = "heart";
+      break;
+    case "cornerOutpoint":
+      resolvedCornerDotType = "outpoint";
+      break;
+    case "cornerInpoint":
+      resolvedCornerDotType = "inpoint";
+      break;
+    case "squareOutpoint":
+      resolvedCornerSquareType = "outpoint";
+      break;
+    case "squareInpoint":
+      resolvedCornerSquareType = "inpoint";
+      break;
+    default:
+      break;
+  }
 
   // Keep a single options object source-of-truth so preview and download always match.
   const options = {
@@ -372,15 +438,15 @@ function buildQrOptions() {
       errorCorrectionLevel: elements.errorCorrection.value
     },
     dotsOptions: {
-      type: elements.dotType.value,
+      type: resolvedDotType,
       color: elements.dotColor.value
     },
     cornersSquareOptions: {
-      type: cornerSquareType,
+      type: resolvedCornerSquareType,
       color: elements.cornerColor.value
     },
     cornersDotOptions: {
-      type: cornerDotType,
+      type: resolvedCornerDotType,
       color: elements.cornerColor.value
     },
     backgroundOptions: {
@@ -432,6 +498,7 @@ function buildQrOptions() {
 function renderQrCode() {
   updateMetricReadouts();
   syncGradientFields();
+  applyPreviewBackground();
 
   try {
     const options = buildQrOptions();
@@ -465,6 +532,7 @@ function applyPreset(presetName) {
   elements.dotType.value = preset.dotType;
   elements.cornerSquareType.value = preset.cornerSquareType;
   elements.cornerDotType.value = preset.cornerDotType;
+  elements.optionalStyle.value = preset.optionalStyle || "none";
   elements.cornerSharpness.value = String(preset.cornerSharpness);
   elements.dotColor.value = preset.dotColor;
   elements.cornerColor.value = preset.cornerColor;
@@ -539,11 +607,13 @@ function hslToHex(hue, saturation, lightness) {
 function randomizeAppearance() {
   const hue = randomInteger(0, 360);
   const accentHue = (hue + randomInteger(18, 84)) % 360;
+  const optionalStylePool = OPTIONAL_STYLE_OPTIONS.filter((option) => option.value !== "none").map((option) => option.value);
 
   elements.shape.value = randomPick(["square", "circle"]);
-  elements.dotType.value = randomPick(DOT_TYPES);
-  elements.cornerSquareType.value = randomPick(CORNER_SQUARE_TYPES);
-  elements.cornerDotType.value = randomPick(CORNER_DOT_TYPES);
+  elements.dotType.value = randomPick(STANDARD_DOT_TYPES);
+  elements.cornerSquareType.value = randomPick(STANDARD_CORNER_SQUARE_TYPES);
+  elements.cornerDotType.value = randomPick(STANDARD_CORNER_DOT_TYPES);
+  elements.optionalStyle.value = Math.random() > 0.8 ? randomPick(optionalStylePool) : "none";
   elements.cornerSharpness.value = String(randomInteger(20, 100));
 
   elements.dotColor.value = hslToHex(hue, randomInteger(55, 90), randomInteger(20, 46));
@@ -558,7 +628,7 @@ function randomizeAppearance() {
   elements.enableTextDecoration.checked = false;
   elements.textDecorationValue.value = "Scan for details";
   elements.textDecorationPosition.value = randomPick(["bottom", "top"]);
-  elements.textDecorationFont.value = randomPick(["Manrope", "Helvetica", "Arial", "Verdana", "Georgia"]);
+  elements.textDecorationFont.value = randomPick(TEXT_FONT_OPTIONS);
   elements.textDecorationSize.value = String(randomInteger(12, 20));
   elements.textDecorationColor.value = hslToHex((hue + 30) % 360, randomInteger(20, 42), randomInteger(18, 35));
   elements.textDecorationWeight.value = randomPick(["bold", "normal"]);
@@ -585,9 +655,11 @@ function resetDefaults() {
   elements.qrSize.value = "360";
   elements.qrMargin.value = "12";
   elements.errorCorrection.value = "Q";
+  elements.optionalStyle.value = "none";
   elements.imageMode.value = "center";
   elements.imageSize.value = "0.28";
   elements.imageMargin.value = "2";
+  elements.previewBackgroundColor.value = "#f4f7fb";
   elements.noBackground.checked = false;
   elements.enableOutline.checked = true;
   elements.outlineThickness.value = "10";
@@ -607,6 +679,7 @@ function resetDefaults() {
   elements.artisticPreset.value = "clean";
   uploadedImageData = null;
   elements.logoUpload.value = "";
+  elements.imageUrlInput.value = "";
   elements.profileUpload.value = "";
 
   applyPreset("clean");
@@ -639,11 +712,13 @@ function getCurrentProfile() {
       dotType: elements.dotType.value,
       cornerSquareType: elements.cornerSquareType.value,
       cornerDotType: elements.cornerDotType.value,
+      optionalStyle: elements.optionalStyle.value,
       cornerSharpness: Number(elements.cornerSharpness.value),
       dotColor: elements.dotColor.value,
       cornerColor: elements.cornerColor.value,
       backgroundColor: elements.backgroundColor.value,
       noBackground: elements.noBackground.checked,
+      previewBackgroundColor: elements.previewBackgroundColor.value,
       enableOutline: elements.enableOutline.checked,
       outlineThickness: Number(elements.outlineThickness.value),
       outlineRadius: Number(elements.outlineRadius.value),
@@ -672,6 +747,9 @@ function getCurrentProfile() {
 }
 
 function applyProfileSettings(rawSettings = {}) {
+  const rawDotType = typeof rawSettings.dotType === "string" ? rawSettings.dotType : "rounded";
+  const rawCornerSquareType = typeof rawSettings.cornerSquareType === "string" ? rawSettings.cornerSquareType : "auto";
+  const rawCornerDotType = typeof rawSettings.cornerDotType === "string" ? rawSettings.cornerDotType : "auto";
   const settings = {
     qrData: typeof rawSettings.qrData === "string" ? rawSettings.qrData : "https://example.com/workshop",
     qrSize: clampNumber(rawSettings.qrSize, 180, 620, 360),
@@ -679,14 +757,17 @@ function applyProfileSettings(rawSettings = {}) {
     errorCorrection: pickAllowed(rawSettings.errorCorrection, ERROR_CORRECTION_LEVELS, "Q"),
     artisticPreset: pickAllowed(rawSettings.artisticPreset, Object.keys(PRESETS), "clean"),
     shape: pickAllowed(rawSettings.shape, ["square", "circle"], "square"),
-    dotType: pickAllowed(rawSettings.dotType, DOT_TYPES, "rounded"),
-    cornerSquareType: pickAllowed(rawSettings.cornerSquareType, CORNER_SQUARE_TYPES, "auto"),
-    cornerDotType: pickAllowed(rawSettings.cornerDotType, CORNER_DOT_TYPES, "auto"),
+    dotType: pickAllowed(rawDotType, STANDARD_DOT_TYPES, "rounded"),
+    cornerSquareType: pickAllowed(rawCornerSquareType, STANDARD_CORNER_SQUARE_TYPES, "auto"),
+    cornerDotType: pickAllowed(rawCornerDotType, STANDARD_CORNER_DOT_TYPES, "auto"),
+    optionalStyle: pickAllowed(rawSettings.optionalStyle, OPTIONAL_STYLE_VALUES, "none"),
     cornerSharpness: clampNumber(rawSettings.cornerSharpness, 0, 100, 70),
     dotColor: typeof rawSettings.dotColor === "string" ? rawSettings.dotColor : "#173f5f",
     cornerColor: typeof rawSettings.cornerColor === "string" ? rawSettings.cornerColor : "#20639b",
     backgroundColor: typeof rawSettings.backgroundColor === "string" ? rawSettings.backgroundColor : "#f7fbff",
     noBackground: Boolean(rawSettings.noBackground),
+    previewBackgroundColor:
+      typeof rawSettings.previewBackgroundColor === "string" ? rawSettings.previewBackgroundColor : "#f4f7fb",
     enableOutline: rawSettings.enableOutline !== undefined ? Boolean(rawSettings.enableOutline) : true,
     outlineThickness: clampNumber(rawSettings.outlineThickness, 2, 44, 10),
     outlineRadius: clampNumber(rawSettings.outlineRadius, 0, 50, 8),
@@ -712,6 +793,22 @@ function applyProfileSettings(rawSettings = {}) {
     imageDataUrl: typeof rawSettings.imageDataUrl === "string" ? rawSettings.imageDataUrl : null
   };
 
+  if (settings.optionalStyle === "none") {
+    if (["star", "plus", "diamond", "randomDot"].includes(rawDotType)) {
+      settings.optionalStyle = rawDotType;
+    } else if (rawCornerDotType === "heart") {
+      settings.optionalStyle = "cornerHeart";
+    } else if (rawCornerDotType === "outpoint") {
+      settings.optionalStyle = "cornerOutpoint";
+    } else if (rawCornerDotType === "inpoint") {
+      settings.optionalStyle = "cornerInpoint";
+    } else if (rawCornerSquareType === "outpoint") {
+      settings.optionalStyle = "squareOutpoint";
+    } else if (rawCornerSquareType === "inpoint") {
+      settings.optionalStyle = "squareInpoint";
+    }
+  }
+
   elements.qrData.value = settings.qrData;
   elements.qrSize.value = String(settings.qrSize);
   elements.qrMargin.value = String(settings.qrMargin);
@@ -721,11 +818,13 @@ function applyProfileSettings(rawSettings = {}) {
   elements.dotType.value = settings.dotType;
   elements.cornerSquareType.value = settings.cornerSquareType;
   elements.cornerDotType.value = settings.cornerDotType;
+  elements.optionalStyle.value = settings.optionalStyle;
   elements.cornerSharpness.value = String(settings.cornerSharpness);
   elements.dotColor.value = settings.dotColor;
   elements.cornerColor.value = settings.cornerColor;
   elements.backgroundColor.value = settings.backgroundColor;
   elements.noBackground.checked = settings.noBackground;
+  elements.previewBackgroundColor.value = settings.previewBackgroundColor;
   elements.enableOutline.checked = settings.enableOutline;
   elements.outlineThickness.value = String(settings.outlineThickness);
   elements.outlineRadius.value = String(settings.outlineRadius);
@@ -752,6 +851,12 @@ function applyProfileSettings(rawSettings = {}) {
   uploadedImageData = settings.imageDataUrl;
   if (!settings.imageDataUrl) {
     elements.logoUpload.value = "";
+    elements.imageUrlInput.value = "";
+  } else if (/^https?:\/\//i.test(settings.imageDataUrl)) {
+    elements.logoUpload.value = "";
+    elements.imageUrlInput.value = settings.imageDataUrl;
+  } else {
+    elements.imageUrlInput.value = "";
   }
 
   renderQrCode();
@@ -803,6 +908,7 @@ async function handleImageUpload(event) {
 
   reader.onload = () => {
     uploadedImageData = String(reader.result);
+    elements.imageUrlInput.value = "";
     renderQrCode();
     setStatus(`Loaded image: ${file.name}`);
   };
@@ -812,6 +918,28 @@ async function handleImageUpload(event) {
   };
 
   reader.readAsDataURL(file);
+}
+
+function handleImageUrlLoad() {
+  const rawValue = elements.imageUrlInput.value.trim();
+  if (!rawValue) {
+    setStatus("Enter an image URL first.", true);
+    return;
+  }
+
+  try {
+    const parsedUrl = new URL(rawValue);
+    if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+      throw new Error("URL must start with http:// or https://");
+    }
+
+    uploadedImageData = parsedUrl.toString();
+    elements.logoUpload.value = "";
+    renderQrCode();
+    setStatus("Loaded image from URL.");
+  } catch (error) {
+    setStatus(`Invalid image URL: ${error.message}`, true);
+  }
 }
 
 async function downloadQr() {
@@ -845,9 +973,10 @@ async function downloadQr() {
 
 function setupEvents() {
   // The select lists are generated from arrays to keep UI + option values in sync.
-  fillSelect(elements.dotType, DOT_TYPES);
-  fillSelect(elements.cornerSquareType, CORNER_SQUARE_TYPES);
-  fillSelect(elements.cornerDotType, CORNER_DOT_TYPES);
+  fillSelect(elements.dotType, STANDARD_DOT_TYPES);
+  fillSelect(elements.cornerSquareType, STANDARD_CORNER_SQUARE_TYPES);
+  fillSelect(elements.cornerDotType, STANDARD_CORNER_DOT_TYPES);
+  fillSelect(elements.optionalStyle, OPTIONAL_STYLE_OPTIONS);
 
   elements.controlsForm.addEventListener("input", renderQrCode);
   elements.controlsForm.addEventListener("change", renderQrCode);
@@ -858,10 +987,18 @@ function setupEvents() {
   });
 
   elements.logoUpload.addEventListener("change", handleImageUpload);
+  elements.loadImageUrl.addEventListener("click", handleImageUrlLoad);
+  elements.imageUrlInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleImageUrlLoad();
+    }
+  });
 
   elements.removeImage.addEventListener("click", () => {
     uploadedImageData = null;
     elements.logoUpload.value = "";
+    elements.imageUrlInput.value = "";
     renderQrCode();
     setStatus("Removed embedded image.");
   });

@@ -149,7 +149,8 @@ button {
 textarea,
 select,
 input[type="file"],
-input[type="text"] {
+input[type="text"],
+input[type="url"] {
   width: 100%;
   margin-top: 6px;
   border: 1px solid #cdd9e5;
@@ -185,6 +186,7 @@ textarea:focus-visible,
 select:focus-visible,
 input[type="file"]:focus-visible,
 input[type="text"]:focus-visible,
+input[type="url"]:focus-visible,
 input[type="color"]:focus-visible,
 button:focus-visible {
   outline: none;
@@ -227,6 +229,23 @@ textarea:disabled {
   gap: 10px;
   font-weight: 600;
   color: var(--text);
+}
+
+.inline-field {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(150px, 220px);
+  align-items: center;
+  gap: 12px;
+}
+
+.inline-field > span {
+  font-weight: 600;
+  color: #425a70;
+}
+
+.inline-field select,
+.inline-field input[type="color"] {
+  margin-top: 0;
 }
 
 .switch-row input[type="checkbox"] {
@@ -322,6 +341,10 @@ button:hover {
   overflow: hidden;
 }
 
+.qr-mount.transparent-preview {
+  background: var(--preview-bg-color, #f4f7fb);
+}
+
 .qr-mount > svg,
 .qr-mount > canvas {
   max-width: 100%;
@@ -331,16 +354,12 @@ button:hover {
 .download-row {
   margin-top: 14px;
   display: grid;
-  grid-template-columns: minmax(120px, auto) 1fr auto;
+  grid-template-columns: 1fr auto;
   align-items: end;
   gap: 10px;
 }
 
 .download-row label {
-  margin: 0;
-}
-
-.download-row select {
   margin: 0;
 }
 
@@ -367,7 +386,8 @@ button:hover {
 
   .two-up,
   .three-up,
-  .download-row {
+  .download-row,
+  .inline-field {
     grid-template-columns: 1fr;
   }
 }

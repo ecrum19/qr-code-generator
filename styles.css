@@ -233,7 +233,7 @@ textarea:disabled {
 
 .inline-field {
   display: grid;
-  grid-template-columns: minmax(120px, 1fr) minmax(150px, 220px);
+  grid-template-columns: minmax(150px, 1fr) minmax(180px, 280px);
   align-items: center;
   gap: 12px;
 }
@@ -241,11 +241,18 @@ textarea:disabled {
 .inline-field > span {
   font-weight: 600;
   color: #425a70;
+  line-height: 1.35;
 }
 
 .inline-field select,
 .inline-field input[type="color"] {
   margin-top: 0;
+}
+
+.single-line-fields {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .switch-row input[type="checkbox"] {
@@ -373,12 +380,28 @@ button:hover {
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .app-shell {
     width: min(98vw, 100%);
-    padding: 20px 10px 24px;
+    padding: 22px 10px 24px;
   }
 
+  .control-panel,
+  .preview-card {
+    padding: 16px;
+  }
+
+  .inline-field {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .qr-mount {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 720px) {
   .control-panel,
   .preview-card {
     border-radius: 14px;
@@ -389,5 +412,10 @@ button:hover {
   .download-row,
   .inline-field {
     grid-template-columns: 1fr;
+  }
+
+  .qr-mount {
+    min-height: 240px;
+    padding: 12px;
   }
 }

@@ -45,7 +45,7 @@ const PRESETS = {
     cornerColor: "#2a5f8f",
     backgroundColor: "#f8fbff",
     noBackground: false,
-    enableOutline: true,
+    enableOutline: false,
     outlineThickness: 10,
     outlineRadius: 8,
     outlineColor: "#d4e2ee",
@@ -661,7 +661,7 @@ function resetDefaults() {
   elements.imageMargin.value = "2";
   elements.previewBackgroundColor.value = "#f4f7fb";
   elements.noBackground.checked = false;
-  elements.enableOutline.checked = true;
+  elements.enableOutline.checked = false;
   elements.outlineThickness.value = "10";
   elements.outlineRadius.value = "8";
   elements.outlineColor.value = "#d4e2ee";

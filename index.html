@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Workshop Generator</title>
+    <meta
+      name="description"
+      content="Interactive QR workshop generator with custom styling, logo upload, and randomization."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">QR Workshop</p>
+        <h1>Web-based QR Code Generator</h1>
+        <p class="hero-copy">
+          Tune style, corners, colors, and embedded images with live feedback. Export your result in
+          multiple formats, or randomize for inspiration.
+        </p>
+      </header>
+
+      <main class="workspace">
+        <section class="control-panel" aria-label="Customization controls">
+          <form id="controlsForm" novalidate>
+            <div class="control-group">
+              <h2>Payload</h2>
+              <label for="qrData">URL or text</label>
+              <textarea
+                id="qrData"
+                name="qrData"
+                rows="4"
+                placeholder="https://example.com/workshop"
+              >https://example.com/workshop</textarea>
+
+              <div class="grid two-up">
+                <label>
+                  Size
+                  <input id="qrSize" name="qrSize" type="range" min="180" max="620" step="10" value="360" />
+                  <span id="qrSizeValue" class="metric-value">360px</span>
+                </label>
+                <label>
+                  Margin
+                  <input id="qrMargin" name="qrMargin" type="range" min="0" max="40" step="1" value="12" />
+                  <span id="qrMarginValue" class="metric-value">12px</span>
+                </label>
+              </div>
+
+              <label for="errorCorrection">Error correction</label>
+              <select id="errorCorrection" name="errorCorrection">
+                <option value="L">L - 7%</option>
+                <option value="M">M - 15%</option>
+                <option value="Q" selected>Q - 25%</option>
+                <option value="H">H - 30%</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <h2>Style</h2>
+
+              <label for="artisticPreset">Artistic style preset</label>
+              <select id="artisticPreset" name="artisticPreset">
+                <option value="clean" selected>Clean Professional</option>
+                <option value="playful">Playful Poster</option>
+                <option value="warm">Warm Editorial</option>
+                <option value="neon">Neon Contrast</option>
+                <option value="mono">Monochrome Minimal</option>
+              </select>
+
+              <div class="grid two-up">
+                <label for="shape">General shape</label>
+                <select id="shape" name="shape">
+                  <option value="square" selected>Square</option>
+                  <option value="circle">Circle</option>
+                </select>
+
+                <label for="dotType">Dot style</label>
+                <select id="dotType" name="dotType"></select>
+              </div>
+
+              <div class="grid two-up">
+                <label for="cornerSquareType">Corner square style</label>
+                <select id="cornerSquareType" name="cornerSquareType"></select>
+
+                <label for="cornerDotType">Corner dot style</label>
+                <select id="cornerDotType" name="cornerDotType"></select>
+              </div>
+
+              <label>
+                Corner sharpness
+                <input
+                  id="cornerSharpness"
+                  name="cornerSharpness"
+                  type="range"
+                  min="0"
+                  max="100"
+                  value="70"
+                />
+                <span id="cornerSharpnessValue" class="metric-value">70%</span>
+              </label>
+
+              <div class="grid three-up">
+                <label>
+                  Dot color
+                  <input id="dotColor" name="dotColor" type="color" value="#173f5f" />
+                </label>
+                <label>
+                  Corner color
+                  <input id="cornerColor" name="cornerColor" type="color" value="#20639b" />
+                </label>
+                <label>
+                  Background
+                  <input id="backgroundColor" name="backgroundColor" type="color" value="#f7fbff" />
+                </label>
+              </div>
+
+              <label class="switch-row" for="enableGradient">
+                <input id="enableGradient" name="enableGradient" type="checkbox" />
+                <span>Use linear gradient on dots</span>
+              </label>
+
+              <div id="gradientFields" class="grid three-up is-disabled" aria-hidden="true">
+                <label>
+                  Start
+                  <input id="gradientStart" name="gradientStart" type="color" value="#173f5f" />
+                </label>
+                <label>
+                  End
+                  <input id="gradientEnd" name="gradientEnd" type="color" value="#3caea3" />
+                </label>
+                <label>
+                  Angle
+                  <input
+                    id="gradientRotation"
+                    name="gradientRotation"
+                    type="range"
+                    min="0"
+                    max="360"
+                    value="35"
+                  />
+                  <span id="gradientRotationValue" class="metric-value">35deg</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <h2>Logo / Image</h2>
+
+              <label for="logoUpload">Upload custom image</label>
+              <input id="logoUpload" name="logoUpload" type="file" accept="image/*" />
+
+              <div class="grid two-up">
+                <label for="imageMode">Image mode</label>
+                <select id="imageMode" name="imageMode">
+                  <option value="center" selected>Center</option>
+                  <option value="overlay">Overlay</option>
+                  <option value="background">Background</option>
+                </select>
+
+                <label>
+                  Image size
+                  <input
+                    id="imageSize"
+                    name="imageSize"
+                    type="range"
+                    min="0.15"
+                    max="0.5"
+                    step="0.01"
+                    value="0.28"
+                  />
+                  <span id="imageSizeValue" class="metric-value">28%</span>
+                </label>
+              </div>
+
+              <label>
+                Image margin
+                <input id="imageMargin" name="imageMargin" type="range" min="0" max="8" step="1" value="2" />
+                <span id="imageMarginValue" class="metric-value">2 modules</span>
+              </label>
+
+              <button id="removeImage" class="secondary-button" type="button">Remove image</button>
+            </div>
+
+            <div class="control-group action-row">
+              <button id="randomizeStyle" class="secondary-button" type="button">Randomize appearance</button>
+              <button id="resetDefaults" class="secondary-button" type="button">Reset defaults</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="preview-panel" aria-label="QR preview and export">
+          <div class="preview-card">
+            <h2>Live Preview</h2>
+            <p id="statusText" class="status-text" aria-live="polite">Ready</p>
+            <div id="qrMount" class="qr-mount"></div>
+
+            <div class="download-row">
+              <label for="downloadFormat">Export format</label>
+              <select id="downloadFormat" name="downloadFormat">
+                <option value="png" selected>PNG</option>
+                <option value="svg">SVG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WEBP</option>
+              </select>
+              <button id="downloadButton" type="button">Download QR</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

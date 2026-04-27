@@ -20,6 +20,8 @@ const DOT_TYPES = [
 
 const CORNER_SQUARE_TYPES = ["auto", "dot", "square", "rounded", "classy", "outpoint", "inpoint"];
 const CORNER_DOT_TYPES = ["auto", "dot", "square", "heart", "rounded", "classy", "outpoint", "inpoint"];
+const ERROR_CORRECTION_LEVELS = ["L", "M", "Q", "H"];
+const PROFILE_VERSION = 1;
 
 const PRESETS = {
   clean: {
@@ -133,6 +135,9 @@ const elements = {
   imageMarginValue: document.querySelector("#imageMarginValue"),
   randomizeStyle: document.querySelector("#randomizeStyle"),
   resetDefaults: document.querySelector("#resetDefaults"),
+  saveProfile: document.querySelector("#saveProfile"),
+  loadProfile: document.querySelector("#loadProfile"),
+  profileUpload: document.querySelector("#profileUpload"),
   downloadFormat: document.querySelector("#downloadFormat"),
   downloadButton: document.querySelector("#downloadButton"),
   statusText: document.querySelector("#statusText"),
@@ -142,6 +147,7 @@ const elements = {
 let qrCodeInstance;
 let uploadedImageData = null;
 let previousGradientEnabled = false;
+let previousGradientType = "linear";
 
 function toTitleCase(value) {
   return value
@@ -257,9 +263,6 @@ function buildQrOptions() {
     }
 
     options.dotsOptions.gradient = gradient;
-  } else {
-    // Explicitly clear previous gradient when toggled off.
-    options.dotsOptions.gradient = null;
   }
 
   if (uploadedImageData) {
@@ -281,9 +284,12 @@ function renderQrCode() {
   try {
     const options = buildQrOptions();
 
-    // Recreate instance when turning gradient off to avoid stale nested options from update merges.
+    // Recreate instance when gradient mode/type changes to avoid stale nested options from update merges.
     const gradientEnabled = elements.enableGradient.checked;
-    const shouldRecreate = !qrCodeInstance || (previousGradientEnabled && !gradientEnabled);
+    const gradientType = elements.gradientType.value;
+    const gradientModeChanged = previousGradientEnabled !== gradientEnabled;
+    const gradientTypeChanged = gradientEnabled && previousGradientType !== gradientType;
+    const shouldRecreate = !qrCodeInstance || gradientModeChanged || gradientTypeChanged;
 
     if (shouldRecreate) {
       qrCodeInstance = new QRCodeJs(options);
@@ -293,6 +299,7 @@ function renderQrCode() {
     }
 
     previousGradientEnabled = gradientEnabled;
+    previousGradientType = gradientType;
     setStatus("Preview updated");
   } catch (error) {
     setStatus(`Could not render QR code: ${error.message}`, true);
@@ -403,9 +410,144 @@ function resetDefaults() {
   elements.artisticPreset.value = "clean";
   uploadedImageData = null;
   elements.logoUpload.value = "";
+  elements.profileUpload.value = "";
 
   applyPreset("clean");
   setStatus("Settings reset to defaults.");
+}
+
+function clampNumber(value, minimum, maximum, fallback) {
+  const numericValue = Number(value);
+  if (Number.isNaN(numericValue)) {
+    return fallback;
+  }
+  return Math.min(maximum, Math.max(minimum, numericValue));
+}
+
+function pickAllowed(value, allowedValues, fallback) {
+  return allowedValues.includes(value) ? value : fallback;
+}
+
+function getCurrentProfile() {
+  return {
+    profileVersion: PROFILE_VERSION,
+    savedAt: new Date().toISOString(),
+    settings: {
+      qrData: elements.qrData.value,
+      qrSize: Number(elements.qrSize.value),
+      qrMargin: Number(elements.qrMargin.value),
+      errorCorrection: elements.errorCorrection.value,
+      artisticPreset: elements.artisticPreset.value,
+      shape: elements.shape.value,
+      dotType: elements.dotType.value,
+      cornerSquareType: elements.cornerSquareType.value,
+      cornerDotType: elements.cornerDotType.value,
+      cornerSharpness: Number(elements.cornerSharpness.value),
+      dotColor: elements.dotColor.value,
+      cornerColor: elements.cornerColor.value,
+      backgroundColor: elements.backgroundColor.value,
+      enableGradient: elements.enableGradient.checked,
+      gradientType: elements.gradientType.value,
+      gradientStart: elements.gradientStart.value,
+      gradientEnd: elements.gradientEnd.value,
+      gradientRotation: Number(elements.gradientRotation.value),
+      imageMode: elements.imageMode.value,
+      imageSize: Number(elements.imageSize.value),
+      imageMargin: Number(elements.imageMargin.value),
+      imageDataUrl: uploadedImageData
+    }
+  };
+}
+
+function applyProfileSettings(rawSettings = {}) {
+  const settings = {
+    qrData: typeof rawSettings.qrData === "string" ? rawSettings.qrData : "https://example.com/workshop",
+    qrSize: clampNumber(rawSettings.qrSize, 180, 620, 360),
+    qrMargin: clampNumber(rawSettings.qrMargin, 0, 40, 12),
+    errorCorrection: pickAllowed(rawSettings.errorCorrection, ERROR_CORRECTION_LEVELS, "Q"),
+    artisticPreset: pickAllowed(rawSettings.artisticPreset, Object.keys(PRESETS), "clean"),
+    shape: pickAllowed(rawSettings.shape, ["square", "circle"], "square"),
+    dotType: pickAllowed(rawSettings.dotType, DOT_TYPES, "rounded"),
+    cornerSquareType: pickAllowed(rawSettings.cornerSquareType, CORNER_SQUARE_TYPES, "auto"),
+    cornerDotType: pickAllowed(rawSettings.cornerDotType, CORNER_DOT_TYPES, "auto"),
+    cornerSharpness: clampNumber(rawSettings.cornerSharpness, 0, 100, 70),
+    dotColor: typeof rawSettings.dotColor === "string" ? rawSettings.dotColor : "#173f5f",
+    cornerColor: typeof rawSettings.cornerColor === "string" ? rawSettings.cornerColor : "#20639b",
+    backgroundColor: typeof rawSettings.backgroundColor === "string" ? rawSettings.backgroundColor : "#f7fbff",
+    enableGradient: Boolean(rawSettings.enableGradient),
+    gradientType: pickAllowed(rawSettings.gradientType, ["linear", "radial"], "linear"),
+    gradientStart: typeof rawSettings.gradientStart === "string" ? rawSettings.gradientStart : "#173f5f",
+    gradientEnd: typeof rawSettings.gradientEnd === "string" ? rawSettings.gradientEnd : "#3caea3",
+    gradientRotation: clampNumber(rawSettings.gradientRotation, 0, 360, 35),
+    imageMode: pickAllowed(rawSettings.imageMode, ["center", "overlay", "background"], "center"),
+    imageSize: clampNumber(rawSettings.imageSize, 0.15, 0.5, 0.28),
+    imageMargin: clampNumber(rawSettings.imageMargin, 0, 8, 2),
+    imageDataUrl: typeof rawSettings.imageDataUrl === "string" ? rawSettings.imageDataUrl : null
+  };
+
+  elements.qrData.value = settings.qrData;
+  elements.qrSize.value = String(settings.qrSize);
+  elements.qrMargin.value = String(settings.qrMargin);
+  elements.errorCorrection.value = settings.errorCorrection;
+  elements.artisticPreset.value = settings.artisticPreset;
+  elements.shape.value = settings.shape;
+  elements.dotType.value = settings.dotType;
+  elements.cornerSquareType.value = settings.cornerSquareType;
+  elements.cornerDotType.value = settings.cornerDotType;
+  elements.cornerSharpness.value = String(settings.cornerSharpness);
+  elements.dotColor.value = settings.dotColor;
+  elements.cornerColor.value = settings.cornerColor;
+  elements.backgroundColor.value = settings.backgroundColor;
+  elements.enableGradient.checked = settings.enableGradient;
+  elements.gradientType.value = settings.gradientType;
+  elements.gradientStart.value = settings.gradientStart;
+  elements.gradientEnd.value = settings.gradientEnd;
+  elements.gradientRotation.value = String(settings.gradientRotation);
+  elements.imageMode.value = settings.imageMode;
+  elements.imageSize.value = String(settings.imageSize);
+  elements.imageMargin.value = String(settings.imageMargin);
+
+  uploadedImageData = settings.imageDataUrl;
+  if (!settings.imageDataUrl) {
+    elements.logoUpload.value = "";
+  }
+
+  renderQrCode();
+}
+
+function saveProfileToFile() {
+  const profile = getCurrentProfile();
+  const serializedProfile = `${JSON.stringify(profile, null, 2)}\n`;
+  const profileBlob = new Blob([serializedProfile], { type: "application/json" });
+  const profileUrl = URL.createObjectURL(profileBlob);
+  const downloadAnchor = document.createElement("a");
+  const dayStamp = new Date().toISOString().slice(0, 10);
+
+  downloadAnchor.href = profileUrl;
+  downloadAnchor.download = `qr-style-profile-${dayStamp}.json`;
+  downloadAnchor.click();
+
+  URL.revokeObjectURL(profileUrl);
+  setStatus("Profile JSON saved.");
+}
+
+async function handleProfileUpload(event) {
+  const [file] = event.target.files || [];
+  if (!file) {
+    return;
+  }
+
+  try {
+    const rawText = await file.text();
+    const parsedJson = JSON.parse(rawText);
+    const settings = parsedJson.settings && typeof parsedJson.settings === "object" ? parsedJson.settings : parsedJson;
+    applyProfileSettings(settings);
+    setStatus(`Profile loaded: ${file.name}`);
+  } catch (error) {
+    setStatus(`Could not load profile JSON: ${error.message}`, true);
+  } finally {
+    elements.profileUpload.value = "";
+  }
 }
 
 async function handleImageUpload(event) {
@@ -484,6 +626,9 @@ function setupEvents() {
 
   elements.randomizeStyle.addEventListener("click", randomizeAppearance);
   elements.resetDefaults.addEventListener("click", resetDefaults);
+  elements.saveProfile.addEventListener("click", saveProfileToFile);
+  elements.loadProfile.addEventListener("click", () => elements.profileUpload.click());
+  elements.profileUpload.addEventListener("change", handleProfileUpload);
   elements.downloadButton.addEventListener("click", downloadQr);
 }
 

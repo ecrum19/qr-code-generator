@@ -12,8 +12,9 @@ A web-based QR code generator workshop built with [`@qr-platform/qr-code.js`](ht
   - corner sharpness profile
   - shape (square or circle)
   - color palette
-- optional dot gradients (`linear` or `radial`)
+- Optional dot gradients (`linear` or `radial`)
 - Upload and embed custom images/logos.
+- Save and load complete style profiles in JSON.
 - Artistic style presets for fast direction changes.
 - One-click randomizer for exploratory design.
 - Export to `PNG`, `SVG`, `JPEG`, or `WEBP`.
@@ -50,14 +51,14 @@ After deployment, the site URL will appear in the workflow output and on the rep
 
 - The app imports the QR library from CDN ESM:
   - `https://cdn.jsdelivr.net/npm/@qr-platform/qr-code.js@latest/+esm`
-- The QR instance is updated in place with `qrCode.update(...)` for smooth interactions, and selectively recreated when turning gradients off to fully clear nested gradient settings.
+- The QR instance is updated in place with `qrCode.update(...)` for smooth interactions, and selectively recreated when gradient mode/type changes so color-only styles cannot inherit stale gradient state.
 - Image uploads are read via `FileReader` and passed into `QRCodeJs` as a data URL.
 - Corner sharpness is implemented as a profile helper that maps slider values to corner style behavior when corner controls are set to `Auto`.
 - Gradient rotation is controlled in degrees in the UI and converted to radians for QRCode.js.
+- Saved JSON profiles include payload, visual settings, and optional embedded image data.
 
 ## Future Improvements
 
-- Add save/load for style presets using local storage and exportable JSON.
 - Add accessibility pass for keyboard-only slider manipulation hints and contrast checks.
 - Add QR scan validation inside the browser (decode after render).
 - Add guided workshop mode with preset checkpoints and undo/redo history.

@@ -120,6 +120,12 @@
                   <span>Optional novelty style</span>
                   <select id="optionalStyle" name="optionalStyle"></select>
                 </label>
+                <p class="field-note">
+                  Base dot/corner selectors stay active. Novelty style only overrides the specific part listed below.
+                </p>
+                <p id="optionalStyleEffect" class="field-note field-note-strong">
+                  Active effect: None. Base dot and corner styles are used.
+                </p>
               </div>
 
               <label>
@@ -155,10 +161,13 @@
                 <span>No background (transparent)</span>
               </label>
 
-              <label id="previewBackgroundField" for="previewBackgroundColor" class="inline-field is-disabled" aria-hidden="true">
-                <span>Transparent preview backdrop</span>
+              <label id="previewBackgroundField" for="previewBackgroundColor" class="inline-field is-disabled">
+                <span>Preview backdrop (transparent mode)</span>
                 <input id="previewBackgroundColor" name="previewBackgroundColor" type="color" value="#f4f7fb" />
               </label>
+              <p id="previewBackdropHelp" class="field-note">
+                Enable "No background (transparent)" to choose the preview-only backdrop color.
+              </p>
 
               <label class="switch-row" for="enableGradient">
                 <input id="enableGradient" name="enableGradient" type="checkbox" />
@@ -202,16 +211,7 @@
                 <p>Embed your own image and control how it is placed.</p>
               </div>
 
-              <label for="logoUpload">Upload custom image</label>
-              <input id="logoUpload" name="logoUpload" type="file" accept="image/*" />
-
-              <label for="imageUrlInput">Or use image URL</label>
-              <input id="imageUrlInput" name="imageUrlInput" type="url" placeholder="https://example.com/logo.png" />
-              <div class="button-row">
-                <button id="loadImageUrl" class="secondary-button" type="button">Load image URL</button>
-              </div>
-
-              <div class="grid two-up">
+              <div class="single-line-fields">
                 <label for="imageMode" class="inline-field">
                   <span>Image mode</span>
                   <select id="imageMode" name="imageMode">
@@ -220,6 +220,16 @@
                     <option value="background">Background</option>
                   </select>
                 </label>
+
+                <label for="logoUpload">Upload custom image</label>
+                <input id="logoUpload" name="logoUpload" type="file" accept="image/*" />
+
+                <label for="imageUrlInput">Or use image URL</label>
+                <input id="imageUrlInput" name="imageUrlInput" type="url" placeholder="https://example.com/logo.png" />
+
+                <div class="button-row">
+                  <button id="loadImageUrl" class="secondary-button" type="button">Load image URL</button>
+                </div>
 
                 <label>
                   Image size
@@ -234,15 +244,17 @@
                   />
                   <span id="imageSizeValue" class="metric-value">28%</span>
                 </label>
+
+                <label>
+                  Image margin
+                  <input id="imageMargin" name="imageMargin" type="range" min="0" max="8" step="1" value="2" />
+                  <span id="imageMarginValue" class="metric-value">2 modules</span>
+                </label>
+
+                <div class="button-row">
+                  <button id="removeImage" class="secondary-button" type="button">Remove image</button>
+                </div>
               </div>
-
-              <label>
-                Image margin
-                <input id="imageMargin" name="imageMargin" type="range" min="0" max="8" step="1" value="2" />
-                <span id="imageMarginValue" class="metric-value">2 modules</span>
-              </label>
-
-              <button id="removeImage" class="secondary-button" type="button">Remove image</button>
             </div>
 
             <div class="control-group">
@@ -256,7 +268,7 @@
                 <span>Add outline frame</span>
               </label>
 
-              <div id="outlineFields" class="grid two-up is-disabled" aria-hidden="true">
+              <div id="outlineFields" class="single-line-fields is-disabled" aria-hidden="true">
                 <label>
                   Outline thickness
                   <input id="outlineThickness" name="outlineThickness" type="range" min="2" max="44" step="1" value="10" />
@@ -267,12 +279,12 @@
                   <input id="outlineRadius" name="outlineRadius" type="range" min="0" max="50" step="1" value="8" />
                   <span id="outlineRadiusValue" class="metric-value">8%</span>
                 </label>
-                <label>
-                  Outline color
+                <label class="inline-field">
+                  <span>Outline color</span>
                   <input id="outlineColor" name="outlineColor" type="color" value="#d4e2ee" />
                 </label>
-                <label>
-                  Outline background
+                <label class="inline-field">
+                  <span>Outline background</span>
                   <input id="outlineBackground" name="outlineBackground" type="color" value="#ffffff" />
                 </label>
               </div>
@@ -282,7 +294,7 @@
                 <span>Add text label</span>
               </label>
 
-              <div id="textDecorationFields" class="grid two-up is-disabled" aria-hidden="true">
+              <div id="textDecorationFields" class="single-line-fields is-disabled" aria-hidden="true">
                 <label>
                   Label text
                   <input id="textDecorationValue" name="textDecorationValue" type="text" placeholder="Scan for paper details" />

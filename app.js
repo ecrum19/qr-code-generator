@@ -205,6 +205,7 @@ const elements = {
   cornerSquareType: document.querySelector("#cornerSquareType"),
   cornerDotType: document.querySelector("#cornerDotType"),
   optionalStyle: document.querySelector("#optionalStyle"),
+  optionalStyleEffect: document.querySelector("#optionalStyleEffect"),
   cornerSharpness: document.querySelector("#cornerSharpness"),
   cornerSharpnessValue: document.querySelector("#cornerSharpnessValue"),
   dotColor: document.querySelector("#dotColor"),
@@ -213,6 +214,7 @@ const elements = {
   noBackground: document.querySelector("#noBackground"),
   previewBackgroundField: document.querySelector("#previewBackgroundField"),
   previewBackgroundColor: document.querySelector("#previewBackgroundColor"),
+  previewBackdropHelp: document.querySelector("#previewBackdropHelp"),
   enableOutline: document.querySelector("#enableOutline"),
   outlineFields: document.querySelector("#outlineFields"),
   outlineThickness: document.querySelector("#outlineThickness"),
@@ -300,6 +302,27 @@ function updateMetricReadouts() {
   elements.imageMarginValue.textContent = `${elements.imageMargin.value} modules`;
 }
 
+function getOptionalStyleEffectText(optionalStyle) {
+  const descriptions = {
+    none: "Active effect: None. Base dot and corner styles are used.",
+    star: "Active effect: Dot style is overridden to Star. Corner selections stay as chosen.",
+    plus: "Active effect: Dot style is overridden to Plus. Corner selections stay as chosen.",
+    diamond: "Active effect: Dot style is overridden to Diamond. Corner selections stay as chosen.",
+    randomDot: "Active effect: Dot style is overridden to Random Dot Mix. Corner selections stay as chosen.",
+    cornerHeart: "Active effect: Corner dot style is overridden to Heart. Dot and corner-square selections stay as chosen.",
+    cornerOutpoint:
+      "Active effect: Corner dot style is overridden to Outpoint. Dot and corner-square selections stay as chosen.",
+    cornerInpoint:
+      "Active effect: Corner dot style is overridden to Inpoint. Dot and corner-square selections stay as chosen.",
+    squareOutpoint:
+      "Active effect: Corner square style is overridden to Outpoint. Dot and corner-dot selections stay as chosen.",
+    squareInpoint:
+      "Active effect: Corner square style is overridden to Inpoint. Dot and corner-dot selections stay as chosen."
+  };
+
+  return descriptions[optionalStyle] || descriptions.none;
+}
+
 function syncGradientFields() {
   const isEnabled = elements.enableGradient.checked;
   elements.gradientFields.classList.toggle("is-disabled", !isEnabled);
@@ -311,7 +334,10 @@ function syncGradientFields() {
   elements.backgroundColor.disabled = elements.noBackground.checked;
   elements.previewBackgroundColor.disabled = !elements.noBackground.checked;
   elements.previewBackgroundField.classList.toggle("is-disabled", !elements.noBackground.checked);
-  elements.previewBackgroundField.setAttribute("aria-hidden", String(!elements.noBackground.checked));
+  elements.previewBackdropHelp.textContent = elements.noBackground.checked
+    ? "Preview backdrop color is active and affects preview only (export remains transparent)."
+    : "Enable \"No background (transparent)\" to choose the preview-only backdrop color.";
+  elements.optionalStyleEffect.textContent = getOptionalStyleEffectText(elements.optionalStyle.value);
 
   const outlineEnabled = elements.enableOutline.checked;
   const textEnabled = elements.enableTextDecoration.checked;

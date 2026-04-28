@@ -177,6 +177,7 @@ input[type="color"] {
 }
 
 input[type="range"] {
+  display: block;
   width: 100%;
   margin-top: 8px;
   accent-color: var(--accent);
@@ -253,6 +254,18 @@ textarea:disabled {
   display: grid;
   gap: 10px;
   margin-bottom: 10px;
+}
+
+.field-note {
+  margin: -2px 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+.field-note-strong {
+  color: #2f475d;
 }
 
 .switch-row input[type="checkbox"] {

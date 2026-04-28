@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QR Workshop Generator</title>
+    <title>QR Code Workshop</title>
     <meta
       name="description"
       content="Interactive QR workshop generator with custom styling, logo upload, and randomization."
@@ -22,8 +22,7 @@
   <body>
     <div class="app-shell">
       <header class="hero">
-        <p class="eyebrow">QR Workshop</p>
-        <h1>Web-based QR Code Generator</h1>
+        <h1>Web-based QR Code Generator and Workshop</h1>
         <p class="hero-copy">
           Tune style, corners, colors, and embedded images with live feedback. Export your result in
           multiple formats, or randomize for inspiration.
@@ -34,7 +33,7 @@
         <section class="control-panel" aria-label="Customization controls">
           <form id="controlsForm" novalidate>
             <div class="panel-heading">
-              <h2>Workshop Controls</h2>
+              <h2>Controls</h2>
               <p>Adjust values below to shape the final QR style and behavior.</p>
             </div>
 
@@ -174,7 +173,7 @@
                 <span>Use gradient on dots</span>
               </label>
 
-              <div id="gradientFields" class="grid two-up is-disabled" aria-hidden="true">
+              <div id="gradientFields" class="single-line-fields is-disabled" aria-hidden="true">
                 <label for="gradientType" class="inline-field">
                   <span>Gradient type</span>
                   <select id="gradientType" name="gradientType">
@@ -182,12 +181,12 @@
                     <option value="radial">Radial</option>
                   </select>
                 </label>
-                <label>
-                  Start
+                <label class="inline-field">
+                  <span>Start</span>
                   <input id="gradientStart" name="gradientStart" type="color" value="#173f5f" />
                 </label>
-                <label>
-                  End
+                <label class="inline-field">
+                  <span>End</span>
                   <input id="gradientEnd" name="gradientEnd" type="color" value="#3caea3" />
                 </label>
                 <label>

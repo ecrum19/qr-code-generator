@@ -20,6 +20,12 @@ A web-based QR code generator workshop built with [`@qr-platform/qr-code.js`](ht
 - Image inclusion via file upload or direct image URL.
 - Separate optional novelty style dropdown for non-standard motifs (stars, hearts, etc.).
 - Upload and embed custom images/logos.
+- Dedicated file-shrinker tab for scanned PDFs and JPG/PNG uploads.
+- Batch processing for PDFs and images, with per-file download results.
+- Adjustable shrink scale, compression quality, output format, and grayscale conversion.
+- Per-file upload summaries that show selected file sizes before processing.
+- Preflight output-size projection with an estimated range and mode-specific guidance.
+- Hosted deployments apply a total batch-size safety cap, while local development stays uncapped.
 - Save and load complete style profiles in JSON.
 - Professional-ready style presets for conference and academic decks.
 - One-click randomizer for exploratory design.
@@ -59,11 +65,15 @@ After deployment, the site URL will appear in the workflow output and on the rep
   - `https://cdn.jsdelivr.net/npm/@qr-platform/qr-code.js@latest/+esm`
 - The QR instance is updated in place with `qrCode.update(...)` for smooth interactions, and selectively recreated when gradient mode/type changes so color-only styles cannot inherit stale gradient state.
 - Image uploads are read via `FileReader` and passed into `QRCodeJs` as a data URL.
+- The shrinker uses `PDF.js` to rasterize PDF pages in the browser and `pdf-lib` to rebuild smaller PDFs from those rendered pages.
+- Batch output projections use exact image recompression and representative PDF page sampling where possible, with a heuristic fallback only if sampling fails.
+- The public hosted build enforces a total upload cap for each shrink batch to reduce the chance of browser crashes on memory-heavy jobs; local development keeps that cap disabled.
 - Corner sharpness is implemented as a profile helper that maps slider values to corner style behavior when corner controls are set to `Auto`.
 - Gradient rotation is controlled in degrees in the UI and converted to radians for QRCode.js.
 - Outline and label text are rendered through `borderOptions` and `borderOptions.decorations` so they are included in exports.
 - Novelty styles are implemented as optional overrides on top of the base style selectors.
 - Saved JSON profiles include payload, visual settings, and optional embedded image data.
+- PDF shrinking is intended primarily for scanned PDFs; text, vectors, forms, and annotations may be flattened during browser-side compression.
 
 ## Future Improvements
 

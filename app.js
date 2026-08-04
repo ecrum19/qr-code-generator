@@ -1,4 +1,8 @@
 import { QRCodeJs } from "https://cdn.jsdelivr.net/npm/@qr-platform/qr-code.js@latest/+esm";
+import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.2.108/build/pdf.mjs";
+import { PDFDocument } from "https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/+esm";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.2.108/build/pdf.worker.mjs";
 
 // Supported style values taken from the qr-code.js documentation.
 const STANDARD_DOT_TYPES = [
@@ -32,6 +36,9 @@ const OPTIONAL_STYLE_VALUES = OPTIONAL_STYLE_OPTIONS.map((option) => option.valu
 const ERROR_CORRECTION_LEVELS = ["L", "M", "Q", "H"];
 const TEXT_FONT_OPTIONS = ["Manrope", "Helvetica", "Arial", "Verdana", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New"];
 const PROFILE_VERSION = 1;
+const DEFAULT_SHRINKER_SUMMARY = "Upload one or more PDFs, PNGs, or JPGs and then run the shrinker.";
+const HOSTED_BATCH_SIZE_LIMIT_BYTES = 120 * 1024 * 1024;
+const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1"]);
 
 const PRESETS = {
   clean: {
@@ -192,6 +199,10 @@ const PRESETS = {
 };
 
 const elements = {
+  qrTabButton: document.querySelector("#qrTabButton"),
+  shrinkerTabButton: document.querySelector("#shrinkerTabButton"),
+  qrTabPanel: document.querySelector("#qrTabPanel"),
+  shrinkerTabPanel: document.querySelector("#shrinkerTabPanel"),
   controlsForm: document.querySelector("#controlsForm"),
   qrData: document.querySelector("#qrData"),
   qrSize: document.querySelector("#qrSize"),
@@ -258,13 +269,36 @@ const elements = {
   downloadFormat: document.querySelector("#downloadFormat"),
   downloadButton: document.querySelector("#downloadButton"),
   statusText: document.querySelector("#statusText"),
-  qrMount: document.querySelector("#qrMount")
+  qrMount: document.querySelector("#qrMount"),
+  shrinkerForm: document.querySelector("#shrinkerForm"),
+  shrinkFiles: document.querySelector("#shrinkFiles"),
+  shrinkFilesSummary: document.querySelector("#shrinkFilesSummary"),
+  shrinkFilesList: document.querySelector("#shrinkFilesList"),
+  shrinkLimitNote: document.querySelector("#shrinkLimitNote"),
+  shrinkScale: document.querySelector("#shrinkScale"),
+  shrinkScaleValue: document.querySelector("#shrinkScaleValue"),
+  shrinkQuality: document.querySelector("#shrinkQuality"),
+  shrinkQualityValue: document.querySelector("#shrinkQualityValue"),
+  pdfRasterFormat: document.querySelector("#pdfRasterFormat"),
+  imageOutputMode: document.querySelector("#imageOutputMode"),
+  convertGrayscale: document.querySelector("#convertGrayscale"),
+  processShrinkFiles: document.querySelector("#processShrinkFiles"),
+  clearShrinkResults: document.querySelector("#clearShrinkResults"),
+  shrinkerStatus: document.querySelector("#shrinkerStatus"),
+  shrinkerSummary: document.querySelector("#shrinkerSummary"),
+  shrinkerProjection: document.querySelector("#shrinkerProjection"),
+  shrinkerResults: document.querySelector("#shrinkerResults")
 };
 
 let qrCodeInstance;
 let uploadedImageData = null;
 let previousGradientEnabled = false;
 let previousGradientType = "linear";
+let shrinkerDownloadUrls = [];
+let shrinkerSelectedFiles = [];
+let shrinkerBatchOverLimit = false;
+let shrinkProjectionRequestId = 0;
+let shrinkProjectionTimer = null;
 
 function toTitleCase(value) {
   return value
@@ -289,6 +323,46 @@ function setStatus(message, isError = false) {
   elements.statusText.style.color = isError ? "#9f1d35" : "#4f6274";
 }
 
+function setShrinkerStatus(message, isError = false) {
+  elements.shrinkerStatus.textContent = message;
+  elements.shrinkerStatus.style.color = isError ? "#9f1d35" : "#4f6274";
+}
+
+function formatPercent(value) {
+  return `${Math.round(value * 100)}%`;
+}
+
+function formatBytes(byteCount) {
+  if (!Number.isFinite(byteCount) || byteCount <= 0) {
+    return "0 B";
+  }
+
+  const units = ["B", "KB", "MB", "GB"];
+  const unitIndex = Math.min(Math.floor(Math.log(byteCount) / Math.log(1024)), units.length - 1);
+  const value = byteCount / 1024 ** unitIndex;
+  return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function isLocalEnvironment() {
+  return window.location.protocol === "file:" || LOCAL_HOSTNAMES.has(window.location.hostname);
+}
+
+function getActiveBatchSizeLimit() {
+  return isLocalEnvironment() ? null : HOSTED_BATCH_SIZE_LIMIT_BYTES;
+}
+
+function getBatchTotalBytes(fileList) {
+  return Array.from(fileList || []).reduce((total, file) => total + file.size, 0);
+}
+
+function updateShrinkLimitNote() {
+  const activeLimit = getActiveBatchSizeLimit();
+
+  elements.shrinkLimitNote.textContent = activeLimit
+    ? `Hosted mode limits each batch to ${formatBytes(activeLimit)} total so the public app stays stable in-browser.`
+    : "Local mode has no enforced total batch-size cap. Very large batches can still use significant browser memory.";
+}
+
 function updateMetricReadouts() {
   elements.qrSizeValue.textContent = `${elements.qrSize.value}px`;
   elements.qrMarginValue.textContent = `${elements.qrMargin.value}px`;
@@ -300,6 +374,18 @@ function updateMetricReadouts() {
   elements.textDecorationSizeValue.textContent = `${elements.textDecorationSize.value}px`;
   elements.imageSizeValue.textContent = `${Math.round(Number(elements.imageSize.value) * 100)}%`;
   elements.imageMarginValue.textContent = `${elements.imageMargin.value} modules`;
+  elements.shrinkScaleValue.textContent = `${elements.shrinkScale.value}%`;
+  elements.shrinkQualityValue.textContent = `${elements.shrinkQuality.value}%`;
+}
+
+function setActiveTab(tabName) {
+  const showQr = tabName === "qr";
+  elements.qrTabButton.classList.toggle("is-active", showQr);
+  elements.shrinkerTabButton.classList.toggle("is-active", !showQr);
+  elements.qrTabButton.setAttribute("aria-pressed", String(showQr));
+  elements.shrinkerTabButton.setAttribute("aria-pressed", String(!showQr));
+  elements.qrTabPanel.classList.toggle("is-active", showQr);
+  elements.shrinkerTabPanel.classList.toggle("is-active", !showQr);
 }
 
 function getOptionalStyleEffectText(optionalStyle) {
@@ -358,6 +444,669 @@ function applyPreviewBackground() {
 
   elements.qrMount.classList.remove("transparent-preview");
   elements.qrMount.style.removeProperty("--preview-bg-color");
+}
+
+function resetShrinkerSummary() {
+  elements.shrinkerSummary.textContent = DEFAULT_SHRINKER_SUMMARY;
+}
+
+function resetShrinkerProjection() {
+  elements.shrinkerProjection.textContent = "Select files to see a projected output size and likely compression behavior.";
+}
+
+function clearShrinkResultsList() {
+  shrinkerDownloadUrls.forEach((url) => URL.revokeObjectURL(url));
+  shrinkerDownloadUrls = [];
+  elements.shrinkerResults.innerHTML = "";
+  resetShrinkerSummary();
+}
+
+function clearShrinkerSelectionState() {
+  clearTimeout(shrinkProjectionTimer);
+  shrinkProjectionRequestId += 1;
+  shrinkerSelectedFiles = [];
+  shrinkerBatchOverLimit = false;
+  elements.processShrinkFiles.disabled = false;
+  renderSelectedFilesList();
+  resetShrinkerProjection();
+}
+
+function isPdfFile(file) {
+  return file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+}
+
+function isImageFile(file) {
+  return file.type.startsWith("image/");
+}
+
+function describeProjectionBehavior(options, selectedFiles) {
+  const hasPdf = selectedFiles.some((entry) => entry.kind === "pdf");
+  const hasImage = selectedFiles.some((entry) => entry.kind === "image");
+  const notes = [];
+
+  if (hasPdf) {
+    notes.push(
+      options.pdfRasterFormat === "jpeg"
+        ? "PDF pages will be rasterized as JPEGs, which usually gives the smallest files for scanned documents."
+        : "PDF pages will be rasterized as PNGs, which preserves sharper edges but often produces larger files."
+    );
+  }
+
+  if (hasImage) {
+    if (options.imageOutputMode === "auto") {
+      notes.push("Image output uses JPEG for opaque images and PNG for images that appear to need transparency.");
+    } else if (options.imageOutputMode === "jpeg") {
+      notes.push("All image outputs will be recompressed as JPEG for smaller uploads.");
+    } else {
+      notes.push("All image outputs will be kept as PNG, which can stay larger but avoids JPEG artifacts.");
+    }
+  }
+
+  if (options.grayscale) {
+    notes.push("Grayscale conversion usually helps scanned pages and photos shrink further.");
+  }
+
+  notes.push(`Current downscale is ${formatPercent(options.scale)} with quality at ${formatPercent(options.quality)}.`);
+  return notes.join(" ");
+}
+
+function estimateProjectionRange(projectedBytes, options, selectedFiles) {
+  let variance = 0.14;
+
+  if (selectedFiles.some((entry) => entry.kind === "pdf")) {
+    variance += 0.1;
+  }
+
+  if (selectedFiles.some((entry) => entry.kind === "image") && options.imageOutputMode === "auto") {
+    variance += 0.06;
+  }
+
+  if (options.pdfRasterFormat === "png") {
+    variance += 0.04;
+  }
+
+  if (options.scale <= 0.45) {
+    variance += 0.04;
+  }
+
+  variance = Math.min(0.34, variance);
+
+  return {
+    minimum: Math.max(Math.round(projectedBytes * (1 - variance)), 1),
+    maximum: Math.max(Math.round(projectedBytes * (1 + variance)), 1)
+  };
+}
+
+function estimateShrinkOutputSizeHeuristic(fileEntry, options) {
+  const scaleFactor = options.scale ** 2;
+  const qualityFactor = 0.45 + options.quality * 0.75;
+  const grayscaleFactor = options.grayscale ? 0.82 : 1;
+
+  if (fileEntry.kind === "pdf") {
+    const rasterFactor = options.pdfRasterFormat === "png" ? 1.15 : 0.72;
+    const pageFactor = fileEntry.pageCount ? Math.min(1.2, 0.9 + fileEntry.pageCount * 0.015) : 1;
+    const estimated = fileEntry.file.size * scaleFactor * qualityFactor * grayscaleFactor * rasterFactor * pageFactor;
+    return Math.max(Math.round(estimated), Math.round(fileEntry.file.size * 0.08));
+  }
+
+  if (fileEntry.kind === "image") {
+    const outputMode = options.imageOutputMode === "auto"
+      ? (fileEntry.hasTransparency ? "png" : "jpeg")
+      : options.imageOutputMode;
+    const formatFactor = outputMode === "png" ? 1.1 : 0.62;
+    const alphaPenalty = outputMode === "png" && fileEntry.hasTransparency ? 1.12 : 1;
+    const estimated = fileEntry.file.size * scaleFactor * qualityFactor * grayscaleFactor * formatFactor * alphaPenalty;
+    return Math.max(Math.round(estimated), Math.round(fileEntry.file.size * 0.05));
+  }
+
+  return fileEntry.file.size;
+}
+
+function summarizeEstimateMethods(estimates) {
+  const imageExactCount = estimates.filter((estimate) => estimate.method === "image-exact").length;
+  const pdfSampledCount = estimates.filter((estimate) => estimate.method === "pdf-sampled").length;
+  const heuristicCount = estimates.filter((estimate) => estimate.method === "heuristic").length;
+  const notes = [];
+
+  if (imageExactCount) {
+    notes.push(`exact recompression for ${imageExactCount} image(s)`);
+  }
+
+  if (pdfSampledCount) {
+    notes.push(`representative page sampling for ${pdfSampledCount} PDF(s)`);
+  }
+
+  if (heuristicCount) {
+    notes.push(`fallback heuristic for ${heuristicCount} file(s)`);
+  }
+
+  return notes.length ? notes.join(", ") : "heuristic estimate";
+}
+
+function getRepresentativePdfPages(pageCount) {
+  if (pageCount <= 3) {
+    return Array.from({ length: pageCount }, (_, index) => index + 1);
+  }
+
+  return [...new Set([1, Math.ceil(pageCount / 2), pageCount])];
+}
+
+function estimatePdfContainerOverhead(pageCount) {
+  return 1400 + pageCount * 220;
+}
+
+async function renderPdfPageBlob(sourcePage, options) {
+  const viewport = sourcePage.getViewport({ scale: options.scale });
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d", { alpha: false });
+  const width = Math.max(1, Math.floor(viewport.width));
+  const height = Math.max(1, Math.floor(viewport.height));
+  const rasterMimeType = options.pdfRasterFormat === "png" ? "image/png" : "image/jpeg";
+
+  canvas.width = width;
+  canvas.height = height;
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, width, height);
+
+  await sourcePage.render({
+    canvasContext: context,
+    viewport
+  }).promise;
+
+  if (options.grayscale) {
+    grayscaleCanvas(context, width, height);
+  }
+
+  const blob = await canvasToBlob(canvas, rasterMimeType, options.quality);
+
+  return {
+    blob,
+    width,
+    height
+  };
+}
+
+async function estimatePdfShrinkOutput(fileEntry, options) {
+  const fallbackBytes = estimateShrinkOutputSizeHeuristic(fileEntry, options);
+  let loadingTask;
+
+  try {
+    const pdfBytes = await fileEntry.file.arrayBuffer();
+    loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(pdfBytes) });
+    const pdfDocument = await loadingTask.promise;
+    const pageCount = pdfDocument.numPages;
+    const samplePages = new Set(getRepresentativePdfPages(pageCount));
+    const sampleRates = [];
+    let totalPixelArea = 0;
+
+    for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
+      const sourcePage = await pdfDocument.getPage(pageNumber);
+      const viewport = sourcePage.getViewport({ scale: options.scale });
+      const width = Math.max(1, Math.floor(viewport.width));
+      const height = Math.max(1, Math.floor(viewport.height));
+      const pixelArea = width * height;
+
+      totalPixelArea += pixelArea;
+
+      if (samplePages.has(pageNumber)) {
+        const renderedPage = await renderPdfPageBlob(sourcePage, options);
+        sampleRates.push(renderedPage.blob.size / Math.max(renderedPage.width * renderedPage.height, 1));
+      }
+    }
+
+    if (!sampleRates.length || totalPixelArea <= 0) {
+      throw new Error("Could not sample PDF pages.");
+    }
+
+    const averageRate = sampleRates.reduce((sum, rate) => sum + rate, 0) / sampleRates.length;
+    const minimumRate = Math.min(...sampleRates);
+    const maximumRate = Math.max(...sampleRates);
+    const containerOverhead = estimatePdfContainerOverhead(pageCount);
+    const estimatedBytes = Math.max(Math.round(averageRate * totalPixelArea + containerOverhead), 1);
+    const minimumBytes = Math.max(Math.round(minimumRate * totalPixelArea + containerOverhead), 1);
+    const maximumBytes = Math.max(Math.round(maximumRate * totalPixelArea + containerOverhead), minimumBytes);
+
+    return {
+      bytes: estimatedBytes,
+      minimumBytes,
+      maximumBytes,
+      method: "pdf-sampled"
+    };
+  } catch {
+    const fallbackRange = estimateProjectionRange(fallbackBytes, options, [fileEntry]);
+
+    return {
+      bytes: fallbackBytes,
+      minimumBytes: fallbackRange.minimum,
+      maximumBytes: fallbackRange.maximum,
+      method: "heuristic"
+    };
+  } finally {
+    if (loadingTask) {
+      loadingTask.destroy();
+    }
+  }
+}
+
+async function estimateImageShrinkOutput(fileEntry, options) {
+  try {
+    const output = await shrinkImageFile(fileEntry.file, options);
+
+    return {
+      bytes: output.blob.size,
+      minimumBytes: output.blob.size,
+      maximumBytes: output.blob.size,
+      method: "image-exact"
+    };
+  } catch {
+    const fallbackBytes = estimateShrinkOutputSizeHeuristic(fileEntry, options);
+    const fallbackRange = estimateProjectionRange(fallbackBytes, options, [fileEntry]);
+
+    return {
+      bytes: fallbackBytes,
+      minimumBytes: fallbackRange.minimum,
+      maximumBytes: fallbackRange.maximum,
+      method: "heuristic"
+    };
+  }
+}
+
+async function estimateShrinkOutput(fileEntry, options) {
+  if (fileEntry.kind === "pdf") {
+    return estimatePdfShrinkOutput(fileEntry, options);
+  }
+
+  if (fileEntry.kind === "image") {
+    return estimateImageShrinkOutput(fileEntry, options);
+  }
+
+  return {
+    bytes: fileEntry.file.size,
+    minimumBytes: fileEntry.file.size,
+    maximumBytes: fileEntry.file.size,
+    method: "heuristic"
+  };
+}
+
+async function collectShrinkEstimates(fileEntries, options) {
+  const estimates = [];
+
+  for (const entry of fileEntries) {
+    estimates.push(await estimateShrinkOutput(entry, options));
+  }
+
+  return estimates;
+}
+
+function renderSelectedFilesList() {
+  elements.shrinkFilesList.innerHTML = "";
+
+  if (!shrinkerSelectedFiles.length) {
+    elements.shrinkFilesSummary.textContent = "No files selected yet.";
+    return;
+  }
+
+  const totalSize = shrinkerSelectedFiles.reduce((sum, entry) => sum + entry.file.size, 0);
+  elements.shrinkFilesSummary.textContent = `${shrinkerSelectedFiles.length} file(s) selected, ${formatBytes(totalSize)} total.`;
+
+  shrinkerSelectedFiles.forEach((entry) => {
+    const item = document.createElement("article");
+    item.className = "result-item";
+
+    const header = document.createElement("div");
+    header.className = "result-header";
+
+    const title = document.createElement("h3");
+    title.className = "result-title";
+    title.textContent = entry.file.name;
+
+    const badge = document.createElement("span");
+    badge.className = "metric-value";
+    badge.textContent = entry.kind.toUpperCase();
+
+    header.append(title, badge);
+    item.append(header);
+
+    const subtitle = document.createElement("p");
+    subtitle.className = "result-subtitle";
+
+    if (entry.kind === "pdf") {
+      subtitle.textContent = `${formatBytes(entry.file.size)}${entry.pageCount ? `, ${entry.pageCount} page(s)` : ""}`;
+    } else if (entry.kind === "image") {
+      subtitle.textContent = `${formatBytes(entry.file.size)}${entry.width && entry.height ? `, ${entry.width}x${entry.height}px` : ""}`;
+    } else {
+      subtitle.textContent = `${formatBytes(entry.file.size)}, unsupported type`;
+    }
+
+    item.append(subtitle);
+    elements.shrinkFilesList.append(item);
+  });
+}
+
+async function updateShrinkProjection() {
+  if (!shrinkerSelectedFiles.length) {
+    resetShrinkerProjection();
+    return;
+  }
+
+  const options = getShrinkerOptions();
+  const supportedFiles = shrinkerSelectedFiles.filter((entry) => entry.kind === "pdf" || entry.kind === "image");
+
+  if (!supportedFiles.length) {
+    elements.shrinkerProjection.textContent = "Selected files are not supported. Upload PDFs, PNGs, or JPGs.";
+    return;
+  }
+
+  const requestId = ++shrinkProjectionRequestId;
+  const originalBytes = supportedFiles.reduce((sum, entry) => sum + entry.file.size, 0);
+  elements.shrinkerProjection.textContent = "Estimating output from representative samples...";
+
+  const estimates = await collectShrinkEstimates(supportedFiles, options);
+
+  if (requestId !== shrinkProjectionRequestId || shrinkerBatchOverLimit) {
+    return;
+  }
+
+  const projectedBytes = estimates.reduce((sum, estimate) => sum + estimate.bytes, 0);
+  const percentDelta = originalBytes > 0 ? Math.round(((projectedBytes - originalBytes) / originalBytes) * 100) : 0;
+  const sizeDirection = projectedBytes <= originalBytes
+    ? `${Math.abs(percentDelta)}% smaller`
+    : `${Math.abs(percentDelta)}% larger`;
+  const projectionRange = {
+    minimum: estimates.reduce((sum, estimate) => sum + estimate.minimumBytes, 0),
+    maximum: estimates.reduce((sum, estimate) => sum + estimate.maximumBytes, 0)
+  };
+  const behavior = describeProjectionBehavior(options, supportedFiles);
+  const estimateMethodSummary = summarizeEstimateMethods(estimates);
+  const pdfCount = supportedFiles.filter((entry) => entry.kind === "pdf").length;
+  const imageCount = supportedFiles.filter((entry) => entry.kind === "image").length;
+  const unsupportedCount = shrinkerSelectedFiles.length - supportedFiles.length;
+  const averageOutput = Math.max(Math.round(projectedBytes / supportedFiles.length), 1);
+
+  elements.shrinkerProjection.innerHTML = [
+    `<p><strong>Projected output:</strong> about ${formatBytes(projectedBytes)} total from ${formatBytes(originalBytes)} (${sizeDirection}).</p>`,
+    `<p><strong>Likely range:</strong> roughly ${formatBytes(projectionRange.minimum)} to ${formatBytes(projectionRange.maximum)}, averaging about ${formatBytes(averageOutput)} per supported file.</p>`,
+    `<p><strong>Batch mix:</strong> ${pdfCount} PDF(s), ${imageCount} image(s)${unsupportedCount ? `, ${unsupportedCount} unsupported file(s) ignored` : ""}.</p>`,
+    `<p><strong>Estimate basis:</strong> ${estimateMethodSummary}.</p>`,
+    `<p><strong>What to expect:</strong> ${behavior}</p>`
+  ].join("");
+}
+
+function scheduleShrinkProjectionUpdate() {
+  clearTimeout(shrinkProjectionTimer);
+
+  if (!shrinkerSelectedFiles.length || shrinkerBatchOverLimit) {
+    return;
+  }
+
+  shrinkProjectionTimer = setTimeout(() => {
+    updateShrinkProjection().catch(() => {
+      elements.shrinkerProjection.textContent = "Projection unavailable for the current selection.";
+    });
+  }, 220);
+}
+
+async function inspectSelectedFiles(fileList) {
+  const files = Array.from(fileList || []);
+  const inspected = await Promise.all(files.map(async (file) => {
+    if (isPdfFile(file)) {
+      try {
+        const pdfBytes = await file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(pdfBytes) });
+        const pdfDocument = await loadingTask.promise;
+        return {
+          file,
+          kind: "pdf",
+          pageCount: pdfDocument.numPages
+        };
+      } catch {
+        return {
+          file,
+          kind: "pdf",
+          pageCount: null
+        };
+      }
+    }
+
+    if (isImageFile(file)) {
+      try {
+        const image = await loadImageFromBlob(file);
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d", { alpha: true });
+        canvas.width = Math.min(image.naturalWidth, 64);
+        canvas.height = Math.min(image.naturalHeight, 64);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        return {
+          file,
+          kind: "image",
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+          hasTransparency: canvasHasTransparency(context, canvas.width, canvas.height)
+        };
+      } catch {
+        return {
+          file,
+          kind: "image",
+          width: null,
+          height: null,
+          hasTransparency: false
+        };
+      }
+    }
+
+    return {
+      file,
+      kind: "unsupported"
+    };
+  }));
+
+  shrinkerSelectedFiles = inspected;
+  renderSelectedFilesList();
+  scheduleShrinkProjectionUpdate();
+}
+
+function updateShrinkerSummary(results) {
+  if (!results.length) {
+    resetShrinkerSummary();
+    return;
+  }
+
+  const successResults = results.filter((result) => !result.error);
+  const originalBytes = successResults.reduce((total, result) => total + result.originalSize, 0);
+  const outputBytes = successResults.reduce((total, result) => total + result.outputSize, 0);
+  const savedBytes = Math.max(0, originalBytes - outputBytes);
+  const reduction = originalBytes > 0 ? Math.round((savedBytes / originalBytes) * 100) : 0;
+
+  elements.shrinkerSummary.textContent = `${successResults.length} file(s) ready. ${formatBytes(originalBytes)} -> ${formatBytes(outputBytes)} (${reduction}% smaller).`;
+}
+
+function renderShrinkResult(result) {
+  const card = document.createElement("article");
+  card.className = "result-item";
+
+  const header = document.createElement("div");
+  header.className = "result-header";
+
+  const title = document.createElement("h3");
+  title.className = "result-title";
+  title.textContent = result.name;
+
+  const badge = document.createElement("span");
+  badge.className = "metric-value";
+  badge.textContent = result.error ? "Failed" : result.kind.toUpperCase();
+
+  header.append(title, badge);
+  card.append(header);
+
+  const metrics = document.createElement("p");
+  metrics.className = "result-metrics";
+
+  if (result.error) {
+    metrics.textContent = result.error;
+    card.append(metrics);
+    elements.shrinkerResults.append(card);
+    return;
+  }
+
+  const reduction = result.originalSize > 0
+    ? Math.round(((result.originalSize - result.outputSize) / result.originalSize) * 100)
+    : 0;
+  metrics.textContent = `${formatBytes(result.originalSize)} -> ${formatBytes(result.outputSize)} (${reduction}% smaller)`;
+  card.append(metrics);
+
+  const actions = document.createElement("div");
+  actions.className = "result-actions";
+
+  const downloadLink = document.createElement("a");
+  downloadLink.href = result.url;
+  downloadLink.download = result.outputName;
+  downloadLink.className = "secondary-button button-link";
+  downloadLink.textContent = "Download";
+  actions.append(downloadLink);
+
+  card.append(actions);
+  elements.shrinkerResults.append(card);
+}
+
+function fileBaseName(filename) {
+  return filename.replace(/\.[^./\\]+$/, "");
+}
+
+function grayscaleCanvas(context, width, height) {
+  const imageData = context.getImageData(0, 0, width, height);
+  const { data } = imageData;
+
+  for (let index = 0; index < data.length; index += 4) {
+    const grayscaleValue = Math.round(data[index] * 0.299 + data[index + 1] * 0.587 + data[index + 2] * 0.114);
+    data[index] = grayscaleValue;
+    data[index + 1] = grayscaleValue;
+    data[index + 2] = grayscaleValue;
+  }
+
+  context.putImageData(imageData, 0, 0);
+}
+
+function canvasHasTransparency(context, width, height) {
+  const { data } = context.getImageData(0, 0, width, height);
+
+  for (let index = 3; index < data.length; index += 4) {
+    if (data[index] !== 255) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function canvasToBlob(canvas, mimeType, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+        return;
+      }
+
+      reject(new Error("Canvas export failed."));
+    }, mimeType, quality);
+  });
+}
+
+function loadImageFromBlob(fileBlob) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(fileBlob);
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Could not decode image."));
+    };
+
+    image.src = objectUrl;
+  });
+}
+
+function getShrinkerOptions() {
+  return {
+    scale: Number(elements.shrinkScale.value) / 100,
+    quality: Number(elements.shrinkQuality.value) / 100,
+    pdfRasterFormat: elements.pdfRasterFormat.value,
+    imageOutputMode: elements.imageOutputMode.value,
+    grayscale: elements.convertGrayscale.checked
+  };
+}
+
+async function shrinkImageFile(file, options) {
+  const image = await loadImageFromBlob(file);
+  const width = Math.max(1, Math.round(image.naturalWidth * options.scale));
+  const height = Math.max(1, Math.round(image.naturalHeight * options.scale));
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d", { alpha: true });
+
+  canvas.width = width;
+  canvas.height = height;
+  context.drawImage(image, 0, 0, width, height);
+
+  if (options.grayscale) {
+    grayscaleCanvas(context, width, height);
+  }
+
+  let mimeType = "image/jpeg";
+
+  if (options.imageOutputMode === "png") {
+    mimeType = "image/png";
+  } else if (options.imageOutputMode === "auto") {
+    mimeType = canvasHasTransparency(context, width, height) ? "image/png" : "image/jpeg";
+  }
+
+  const blob = await canvasToBlob(canvas, mimeType, options.quality);
+  const extension = mimeType === "image/png" ? "png" : "jpg";
+
+  return {
+    kind: "image",
+    outputName: `${fileBaseName(file.name)}-shrunk.${extension}`,
+    blob
+  };
+}
+
+async function shrinkPdfFile(file, options, progressCallback) {
+  const pdfBytes = await file.arrayBuffer();
+  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(pdfBytes) });
+  const pdfDocument = await loadingTask.promise;
+  const outputDocument = await PDFDocument.create();
+  const rasterMimeType = options.pdfRasterFormat === "png" ? "image/png" : "image/jpeg";
+
+  for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber += 1) {
+    progressCallback(pageNumber, pdfDocument.numPages);
+    const sourcePage = await pdfDocument.getPage(pageNumber);
+    const viewport = sourcePage.getViewport({ scale: options.scale });
+    const renderedPage = await renderPdfPageBlob(sourcePage, options);
+    const pageBlob = renderedPage.blob;
+    const pageBytes = await pageBlob.arrayBuffer();
+    const embeddedImage = rasterMimeType === "image/png"
+      ? await outputDocument.embedPng(pageBytes)
+      : await outputDocument.embedJpg(pageBytes);
+    const outputPage = outputDocument.addPage([viewport.width, viewport.height]);
+
+    outputPage.drawImage(embeddedImage, {
+      x: 0,
+      y: 0,
+      width: viewport.width,
+      height: viewport.height
+    });
+  }
+
+  const outputBytes = await outputDocument.save();
+
+  return {
+    kind: "pdf",
+    outputName: `${fileBaseName(file.name)}-shrunk.pdf`,
+    blob: new Blob([outputBytes], { type: "application/pdf" })
+  };
 }
 
 // Converts the sharpness slider into stylistic defaults when corner type is set to auto.
@@ -968,6 +1717,146 @@ function handleImageUrlLoad() {
   }
 }
 
+async function handleShrinkFilesSubmit(event) {
+  event.preventDefault();
+
+  const files = Array.from(elements.shrinkFiles.files || []);
+  if (!files.length) {
+    setShrinkerStatus("Select at least one PDF, PNG, or JPG file.", true);
+    return;
+  }
+
+  const batchSizeLimit = getActiveBatchSizeLimit();
+  const totalBytes = getBatchTotalBytes(files);
+
+  if ((batchSizeLimit && totalBytes > batchSizeLimit) || shrinkerBatchOverLimit) {
+    shrinkerBatchOverLimit = true;
+    elements.processShrinkFiles.disabled = true;
+    setShrinkerStatus(
+      `This hosted build only accepts batches up to ${formatBytes(batchSizeLimit)}. Current selection: ${formatBytes(totalBytes)}.`,
+      true
+    );
+    return;
+  }
+
+  clearShrinkResultsList();
+  setShrinkerStatus(`Preparing ${files.length} file(s)...`);
+  elements.processShrinkFiles.disabled = true;
+  elements.clearShrinkResults.disabled = true;
+
+  const options = getShrinkerOptions();
+  const results = [];
+
+  try {
+    for (let index = 0; index < files.length; index += 1) {
+      const file = files[index];
+
+      try {
+        if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+          setShrinkerStatus(`Processing ${file.name} (${index + 1}/${files.length})...`);
+          const output = await shrinkPdfFile(file, options, (pageNumber, totalPages) => {
+            setShrinkerStatus(`Processing ${file.name}: page ${pageNumber} of ${totalPages} (${index + 1}/${files.length})...`);
+          });
+          const url = URL.createObjectURL(output.blob);
+
+          shrinkerDownloadUrls.push(url);
+          results.push({
+            ...output,
+            name: file.name,
+            originalSize: file.size,
+            outputSize: output.blob.size,
+            url
+          });
+        } else if (file.type.startsWith("image/")) {
+          setShrinkerStatus(`Processing ${file.name} (${index + 1}/${files.length})...`);
+          const output = await shrinkImageFile(file, options);
+          const url = URL.createObjectURL(output.blob);
+
+          shrinkerDownloadUrls.push(url);
+          results.push({
+            ...output,
+            name: file.name,
+            originalSize: file.size,
+            outputSize: output.blob.size,
+            url
+          });
+        } else {
+          results.push({
+            name: file.name,
+            kind: "unsupported",
+            error: "Unsupported file type. Upload PDFs, PNGs, or JPGs only."
+          });
+        }
+      } catch (error) {
+        results.push({
+          name: file.name,
+          kind: "error",
+          error: error instanceof Error ? error.message : "Processing failed."
+        });
+      }
+    }
+
+    results.forEach(renderShrinkResult);
+    updateShrinkerSummary(results);
+    const failedCount = results.filter((result) => result.error).length;
+
+    setShrinkerStatus(
+      failedCount ? `Finished with ${failedCount} failed file(s).` : `Finished processing ${results.length} file(s).`,
+      failedCount > 0
+    );
+  } finally {
+    elements.processShrinkFiles.disabled = false;
+    elements.clearShrinkResults.disabled = false;
+  }
+}
+
+async function handleShrinkFilesSelection(event) {
+  const files = Array.from(event.target.files || []);
+
+  if (!files.length) {
+    clearShrinkerSelectionState();
+    setShrinkerStatus("Ready");
+    return;
+  }
+
+  const totalBytes = getBatchTotalBytes(files);
+  const batchSizeLimit = getActiveBatchSizeLimit();
+
+  if (batchSizeLimit && totalBytes > batchSizeLimit) {
+    clearShrinkerSelectionState();
+    shrinkerBatchOverLimit = true;
+    elements.processShrinkFiles.disabled = true;
+    elements.shrinkFilesSummary.textContent =
+      `Selected batch is ${formatBytes(totalBytes)}. Hosted limit is ${formatBytes(batchSizeLimit)}.`;
+    elements.shrinkerProjection.textContent =
+      "Choose a smaller batch or split the upload into multiple runs before processing.";
+    setShrinkerStatus(
+      `Batch too large for hosted mode: ${formatBytes(totalBytes)} selected, limit is ${formatBytes(batchSizeLimit)}.`,
+      true
+    );
+    return;
+  }
+
+  setShrinkerStatus(`Inspecting ${files.length} file(s)...`);
+  await inspectSelectedFiles(files);
+  shrinkerBatchOverLimit = false;
+  elements.processShrinkFiles.disabled = false;
+
+  const unsupportedCount = shrinkerSelectedFiles.filter((entry) => entry.kind === "unsupported").length;
+  setShrinkerStatus(
+    unsupportedCount
+      ? `${files.length} file(s) selected. ${unsupportedCount} unsupported file(s) will be skipped.`
+      : `${files.length} file(s) selected and ready to process.`
+  );
+}
+
+function handleClearShrinkResults() {
+  clearShrinkResultsList();
+  elements.shrinkFiles.value = "";
+  clearShrinkerSelectionState();
+  setShrinkerStatus("Ready");
+}
+
 async function downloadQr() {
   if (!qrCodeInstance) {
     return;
@@ -1006,6 +1895,16 @@ function setupEvents() {
 
   elements.controlsForm.addEventListener("input", renderQrCode);
   elements.controlsForm.addEventListener("change", renderQrCode);
+  elements.shrinkerForm.addEventListener("input", () => {
+    updateMetricReadouts();
+    scheduleShrinkProjectionUpdate();
+  });
+  elements.shrinkerForm.addEventListener("change", () => {
+    updateMetricReadouts();
+    scheduleShrinkProjectionUpdate();
+  });
+  elements.qrTabButton.addEventListener("click", () => setActiveTab("qr"));
+  elements.shrinkerTabButton.addEventListener("click", () => setActiveTab("shrinker"));
 
   elements.artisticPreset.addEventListener("change", (event) => {
     applyPreset(event.target.value);
@@ -1035,7 +1934,14 @@ function setupEvents() {
   elements.loadProfile.addEventListener("click", () => elements.profileUpload.click());
   elements.profileUpload.addEventListener("change", handleProfileUpload);
   elements.downloadButton.addEventListener("click", downloadQr);
+  elements.shrinkFiles.addEventListener("change", handleShrinkFilesSelection);
+  elements.shrinkerForm.addEventListener("submit", handleShrinkFilesSubmit);
+  elements.clearShrinkResults.addEventListener("click", handleClearShrinkResults);
 }
 
 setupEvents();
+setActiveTab("qr");
 resetDefaults();
+resetShrinkerSummary();
+updateShrinkLimitNote();
+setShrinkerStatus("Ready");

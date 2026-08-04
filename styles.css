@@ -61,10 +61,52 @@ h1 {
   line-height: 1.55;
 }
 
+.tab-bar {
+  display: inline-flex;
+  gap: 10px;
+  padding: 8px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 12px 26px rgba(12, 28, 41, 0.06);
+  backdrop-filter: blur(14px);
+}
+
+.tab-button {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  padding: 10px 16px;
+}
+
+.tab-button:hover {
+  background: rgba(23, 96, 135, 0.08);
+  color: var(--text);
+}
+
+.tab-button.is-active {
+  background: linear-gradient(135deg, #176087 0%, #2b7aa8 100%);
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(23, 96, 135, 0.22);
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.is-active {
+  display: block;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: 1.25fr 0.95fr;
   gap: 22px;
+}
+
+.utility-workspace {
+  align-items: start;
 }
 
 .control-panel,
@@ -291,6 +333,144 @@ textarea:disabled {
   gap: 10px;
 }
 
+.notice-card,
+.summary-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, #fbfdff 0%, #f4f9fd 100%);
+  padding: 14px 16px;
+}
+
+.notice-card p,
+.summary-card {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.notice-card p + p {
+  margin-top: 10px;
+}
+
+.file-picker-card {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px dashed #9eb9cc;
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(circle at top right, rgba(23, 96, 135, 0.08), transparent 34%),
+    linear-gradient(180deg, #fcfeff 0%, #f3f8fc 100%);
+  cursor: pointer;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.file-picker-card:focus-within,
+.file-picker-card:hover {
+  border-color: #6c98b3;
+  box-shadow: 0 10px 20px rgba(23, 96, 135, 0.08);
+  transform: translateY(-1px);
+}
+
+.file-picker-kicker {
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.file-picker-title {
+  color: var(--text);
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.file-picker-copy {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.file-picker-button {
+  justify-self: start;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.visually-hidden-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.shrinker-card {
+  display: grid;
+  gap: 14px;
+}
+
+.results-list {
+  display: grid;
+  gap: 12px;
+}
+
+.compact-results {
+  gap: 8px;
+}
+
+.result-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbfe 100%);
+  padding: 14px 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.result-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.result-subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.result-metrics {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 button {
   border: none;
   border-radius: 10px;
@@ -301,6 +481,13 @@ button {
   letter-spacing: 0.01em;
   cursor: pointer;
   transition: background-color 0.18s ease, transform 0.14s ease;
+}
+
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 button:hover {
@@ -412,6 +599,12 @@ button:hover {
   .qr-mount {
     min-height: 300px;
   }
+
+  .tab-bar {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 720px) {
@@ -430,5 +623,14 @@ button:hover {
   .qr-mount {
     min-height: 240px;
     padding: 12px;
+  }
+
+  .tab-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .result-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

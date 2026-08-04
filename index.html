@@ -6,7 +6,7 @@
     <title>QR Code Workshop</title>
     <meta
       name="description"
-      content="Interactive QR workshop generator with custom styling, logo upload, and randomization."
+      content="Interactive QR workshop generator with custom styling, logo upload, randomization, and browser-based file shrinking."
     />
     <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon-16.png" />
@@ -24,13 +24,23 @@
       <header class="hero">
         <h1>Web-based QR Code Generator and Workshop</h1>
         <p class="hero-copy">
-          Tune style, corners, colors, and embedded images with live feedback. Export your result in
-          multiple formats, or randomize for inspiration.
+          Build custom QR codes with live styling controls or switch to the file shrinker to reduce
+          scanned PDFs and large images directly in the browser.
         </p>
       </header>
 
-      <main class="workspace">
-        <section class="control-panel" aria-label="Customization controls">
+      <nav class="tab-bar" aria-label="Application sections">
+        <button id="qrTabButton" class="tab-button is-active" type="button" data-tab-target="qr">
+          QR Workshop
+        </button>
+        <button id="shrinkerTabButton" class="tab-button" type="button" data-tab-target="shrinker">
+          File Shrinker
+        </button>
+      </nav>
+
+      <section id="qrTabPanel" class="tab-panel is-active" data-tab-panel="qr">
+        <main class="workspace">
+          <section class="control-panel" aria-label="Customization controls">
           <form id="controlsForm" novalidate>
             <div class="panel-heading">
               <h2>Controls</h2>
@@ -389,8 +399,135 @@
               <button id="downloadButton" type="button">Download QR</button>
             </div>
           </div>
-        </section>
-      </main>
+          </section>
+        </main>
+      </section>
+
+      <section id="shrinkerTabPanel" class="tab-panel" data-tab-panel="shrinker">
+        <main class="workspace utility-workspace">
+          <section class="control-panel" aria-label="File shrinking controls">
+            <form id="shrinkerForm" novalidate>
+              <div class="panel-heading">
+                <h2>File Shrinker</h2>
+                <p>Reduce scanned PDFs and image uploads in the browser without zipping them.</p>
+              </div>
+
+              <div class="control-group">
+                <div class="group-heading">
+                  <h3>Uploads</h3>
+                  <p>Batch upload scanned PDFs or JPG/PNG files. Each file is processed separately.</p>
+                </div>
+
+                <label for="shrinkFiles">Files</label>
+                <label for="shrinkFiles" class="file-picker-card">
+                  <span class="file-picker-kicker">Batch upload</span>
+                  <span class="file-picker-title">Choose files for compression</span>
+                  <span class="file-picker-copy">PDF, PNG, and JPG files are supported. Multiple files can be processed in one run.</span>
+                  <span class="file-picker-button">Browse files</span>
+                </label>
+                <input
+                  id="shrinkFiles"
+                  name="shrinkFiles"
+                  class="visually-hidden-input"
+                  type="file"
+                  accept=".pdf,application/pdf,image/png,image/jpeg,image/jpg"
+                  multiple
+                />
+                <div id="shrinkFilesSummary" class="summary-card">
+                  No files selected yet.
+                </div>
+                <div id="shrinkFilesList" class="results-list compact-results"></div>
+                <p id="shrinkLimitNote" class="field-note field-note-strong">
+                  Hosted mode limits total batch size to protect browser stability.
+                </p>
+                <p class="field-note">
+                  PDFs are rebuilt page-by-page as images, which is best for scanned documents and
+                  not ideal for selectable-text or vector-heavy PDFs.
+                </p>
+              </div>
+
+              <div class="control-group">
+                <div class="group-heading">
+                  <h3>Compression Settings</h3>
+                  <p>Lower scale and quality produce smaller files, but with more visible degradation.</p>
+                </div>
+
+                <div class="single-line-fields">
+                  <label>
+                    Output scale
+                    <input id="shrinkScale" name="shrinkScale" type="range" min="20" max="100" step="5" value="60" />
+                    <span id="shrinkScaleValue" class="metric-value">60%</span>
+                  </label>
+
+                  <label>
+                    Compression quality
+                    <input id="shrinkQuality" name="shrinkQuality" type="range" min="35" max="95" step="5" value="70" />
+                    <span id="shrinkQualityValue" class="metric-value">70%</span>
+                  </label>
+
+                  <label for="pdfRasterFormat" class="inline-field">
+                    <span>PDF page format</span>
+                    <select id="pdfRasterFormat" name="pdfRasterFormat">
+                      <option value="jpeg" selected>JPEG (smaller)</option>
+                      <option value="png">PNG (sharper, larger)</option>
+                    </select>
+                  </label>
+
+                  <label for="imageOutputMode" class="inline-field">
+                    <span>Image output mode</span>
+                    <select id="imageOutputMode" name="imageOutputMode">
+                      <option value="auto" selected>Auto (prefer JPEG for size)</option>
+                      <option value="jpeg">Always JPEG</option>
+                      <option value="png">Always PNG</option>
+                    </select>
+                  </label>
+
+                  <label class="switch-row" for="convertGrayscale">
+                    <input id="convertGrayscale" name="convertGrayscale" type="checkbox" />
+                    <span>Convert output to grayscale</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <div class="group-heading">
+                  <h3>Limitations</h3>
+                  <p>Keep the tradeoffs explicit before users process files.</p>
+                </div>
+                <div class="notice-card">
+                  <p>
+                    This shrinker is designed for scanned PDFs and large image uploads. PDF text,
+                    vectors, layers, forms, and annotations may be flattened during compression.
+                  </p>
+                  <p>
+                    Very large PDFs can take time and memory because pages are rendered in the
+                    browser one at a time.
+                  </p>
+                </div>
+              </div>
+
+              <div class="control-group action-row">
+                <button id="processShrinkFiles" type="submit">Shrink files</button>
+                <button id="clearShrinkResults" class="secondary-button" type="button">Clear results</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="preview-panel" aria-label="File shrinking results">
+            <div class="preview-card shrinker-card">
+              <h2>Batch Results</h2>
+              <p id="shrinkerStatus" class="status-text" aria-live="polite">Ready</p>
+              <div id="shrinkerSummary" class="summary-card">
+                Upload one or more PDFs, PNGs, or JPGs and then run the shrinker.
+              </div>
+              <div id="shrinkerProjection" class="summary-card">
+                Select files to see a projected output size and likely compression behavior.
+              </div>
+              <div id="shrinkerResults" class="results-list"></div>
+            </div>
+          </section>
+        </main>
+      </section>
     </div>
 
     <script type="module" src="./app.js"></script>
